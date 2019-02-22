@@ -38,4 +38,5 @@ You can also create a custom shape template, and place it in "/Resources/ShapeTe
 
 #### One Draw Call
 The most amazing part is that you can draw large amounts of meshes in a single draw call.  In the example below, every dot of color is a sphere mesh, and is all done in a single draw call.
+
 http://www.jgallant.com/images/unitybullethell/test.gif
