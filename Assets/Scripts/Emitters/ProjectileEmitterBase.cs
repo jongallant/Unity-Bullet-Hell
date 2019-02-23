@@ -99,6 +99,12 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     {
         ActiveProjectileCount = 0;
 
+        ContactFilter2D contactFilter = new ContactFilter2D
+        {
+            layerMask = LayerMask,
+            useTriggers = false,
+        };
+
         for (int i = 0; i < Projectiles.Nodes.Length; i++)
         {
             if (Projectiles.Nodes[i].Active)
@@ -112,11 +118,11 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                     Projectiles.Nodes[i].Item.Velocity *= (1 + Projectiles.Nodes[i].Item.Acceleration * tick);
 
                     // calculate where projectile will be at the end of this frame
-                    Vector2 endPoint = Projectiles.Nodes[i].Item.Position + Projectiles.Nodes[i].Item.Velocity * tick;
-                    float distance = (endPoint - Projectiles.Nodes[i].Item.Position).magnitude;
+                    Vector2 travelDelta = Projectiles.Nodes[i].Item.Velocity * tick; // TODO rename to deltaPosition
+                    float distance = travelDelta.magnitude;
 
                     // Raycast towards where projectile is moving
-                    if (Physics2D.RaycastNonAlloc(Projectiles.Nodes[i].Item.Position, Projectiles.Nodes[i].Item.Velocity.normalized, RaycastHitBuffer, distance, LayerMask) > 0)
+                    if (Physics2D.Raycast(Projectiles.Nodes[i].Item.Position, travelDelta, contactFilter, RaycastHitBuffer, distance) > 0)
                     {
                         // Put whatever hit code you want here such as damage events
 
