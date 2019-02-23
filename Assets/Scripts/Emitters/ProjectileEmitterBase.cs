@@ -131,8 +131,11 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                         {
                             // rudementary bounce -- will work well on static surfaces
                             Projectiles.Nodes[i].Item.Velocity = Vector2.Reflect(Projectiles.Nodes[i].Item.Velocity, RaycastHitBuffer[0].normal);
+                            // what fraction of the distance do we still have to move this frame?
+                            float leakedFraction = 1f - RaycastHitBuffer[0].distance / distance;
+                            travelDelta = Projectiles.Nodes[i].Item.Velocity * tick * leakedFraction;
 
-                            Projectiles.Nodes[i].Item.Position += Projectiles.Nodes[i].Item.Velocity * tick;
+                            Projectiles.Nodes[i].Item.Position = RaycastHitBuffer[0].centroid + travelDelta;
                             Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
 
                             ProjectileManager.Instance.UpdateBufferData(ActiveProjectileCount, ProjectileType, Projectiles.Nodes[i].Item);
