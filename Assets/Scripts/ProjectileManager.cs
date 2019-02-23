@@ -129,8 +129,8 @@ public class ProjectileManager : MonoBehaviour
             LastAccessedRenderer = IndirectRenderers[LastAccessedProjectileTypeIndex];
         }
 
-        LastAccessedRenderer.UpdateBufferData(ProjectileTypes[LastAccessedProjectileTypeIndex].BufferIndex, data);
-        ProjectileTypes[LastAccessedProjectileTypeIndex].BufferIndex++;
+        LastAccessedRenderer.UpdateBufferData(projectileType.BufferIndex, data);
+        projectileType.BufferIndex++;
     }
     
     public void Update()
