@@ -105,6 +105,8 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
             useTriggers = false,
         };
 
+        ProjectileManager projectileManager = ProjectileManager.Instance;
+
         for (int i = 0; i < Projectiles.Nodes.Length; i++)
         {
             if (Projectiles.Nodes[i].Active)
@@ -138,7 +140,7 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                             Projectiles.Nodes[i].Item.Position = RaycastHitBuffer[0].centroid + travelDelta;
                             Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
 
-                            ProjectileManager.Instance.UpdateBufferData(ActiveProjectileCount, ProjectileType, Projectiles.Nodes[i].Item);
+                            projectileManager.UpdateBufferData(ActiveProjectileCount, ProjectileType, Projectiles.Nodes[i].Item);
 
                             ActiveProjectileCount++;
                         }
@@ -154,7 +156,7 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                         Projectiles.Nodes[i].Item.Position += Projectiles.Nodes[i].Item.Velocity * tick;
                         Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
 
-                        ProjectileManager.Instance.UpdateBufferData(ActiveProjectileCount, ProjectileType, Projectiles.Nodes[i].Item);
+                        projectileManager.UpdateBufferData(ActiveProjectileCount, ProjectileType, Projectiles.Nodes[i].Item);
 
                         ActiveProjectileCount++;
                     }
