@@ -12,6 +12,10 @@ public class ProjectileManager : MonoBehaviour
     // Each projectile type has its own material, therefore, own IndirectRenderer
     private Dictionary<int, IndirectRenderer> IndirectRenderers;
 
+    // Cache the last accessed IndirectRenderer to reduce the Dict lookup for batches
+    private int LastAccessedProjectileTypeIndex = -1;
+    private IndirectRenderer LastAccessedRenderer;
+
     // Counters to keep track of Projectile Group information
     private Dictionary<int, ProjectileTypeCounters> ProjectileTypeCounters;
 
@@ -119,8 +123,14 @@ public class ProjectileManager : MonoBehaviour
 
     public void UpdateBufferData(int index, ProjectileType projectileType, ProjectileData data)
     {
-        IndirectRenderers[projectileType.Index].UpdateBufferData(ProjectileTypes[projectileType.Index].BufferIndex, data);
-        ProjectileTypes[projectileType.Index].BufferIndex++;
+        if (projectileType.Index != LastAccessedProjectileTypeIndex)
+        {
+            LastAccessedProjectileTypeIndex = projectileType.Index;
+            LastAccessedRenderer = IndirectRenderers[LastAccessedProjectileTypeIndex];
+        }
+
+        LastAccessedRenderer.UpdateBufferData(projectileType.BufferIndex, data);
+        projectileType.BufferIndex++;
     }
     
     public void Update()

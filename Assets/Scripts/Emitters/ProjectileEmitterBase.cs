@@ -99,6 +99,14 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     {
         ActiveProjectileCount = 0;
 
+        ContactFilter2D contactFilter = new ContactFilter2D
+        {
+            layerMask = LayerMask,
+            useTriggers = false,
+        };
+
+        ProjectileManager projectileManager = ProjectileManager.Instance;
+
         for (int i = 0; i < Projectiles.Nodes.Length; i++)
         {
             if (Projectiles.Nodes[i].Active)
@@ -112,11 +120,11 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                     Projectiles.Nodes[i].Item.Velocity *= (1 + Projectiles.Nodes[i].Item.Acceleration * tick);
 
                     // calculate where projectile will be at the end of this frame
-                    Vector2 endPoint = Projectiles.Nodes[i].Item.Position + Projectiles.Nodes[i].Item.Velocity * tick;
-                    float distance = (endPoint - Projectiles.Nodes[i].Item.Position).magnitude;
+                    Vector2 deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick;
+                    float distance = deltaPosition.magnitude;
 
                     // Raycast towards where projectile is moving
-                    if (Physics2D.RaycastNonAlloc(Projectiles.Nodes[i].Item.Position, Projectiles.Nodes[i].Item.Velocity.normalized, RaycastHitBuffer, distance, LayerMask) > 0)
+                    if (Physics2D.Raycast(Projectiles.Nodes[i].Item.Position, deltaPosition, contactFilter, RaycastHitBuffer, distance) > 0)
                     {
                         // Put whatever hit code you want here such as damage events
 
@@ -125,11 +133,14 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                         {
                             // rudementary bounce -- will work well on static surfaces
                             Projectiles.Nodes[i].Item.Velocity = Vector2.Reflect(Projectiles.Nodes[i].Item.Velocity, RaycastHitBuffer[0].normal);
+                            // what fraction of the distance do we still have to move this frame?
+                            float leakedFraction = 1f - RaycastHitBuffer[0].distance / distance;
+                            deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick * leakedFraction;
 
-                            Projectiles.Nodes[i].Item.Position += Projectiles.Nodes[i].Item.Velocity * tick;
+                            Projectiles.Nodes[i].Item.Position = RaycastHitBuffer[0].centroid + deltaPosition;
                             Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
 
-                            ProjectileManager.Instance.UpdateBufferData(ActiveProjectileCount, ProjectileType, Projectiles.Nodes[i].Item);
+                            projectileManager.UpdateBufferData(ActiveProjectileCount, ProjectileType, Projectiles.Nodes[i].Item);
 
                             ActiveProjectileCount++;
                         }
@@ -142,10 +153,10 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                     else
                     {
                         // No collision - move projectile
-                        Projectiles.Nodes[i].Item.Position += Projectiles.Nodes[i].Item.Velocity * tick;
+                        Projectiles.Nodes[i].Item.Position += deltaPosition;
                         Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
 
-                        ProjectileManager.Instance.UpdateBufferData(ActiveProjectileCount, ProjectileType, Projectiles.Nodes[i].Item);
+                        projectileManager.UpdateBufferData(ActiveProjectileCount, ProjectileType, Projectiles.Nodes[i].Item);
 
                         ActiveProjectileCount++;
                     }
