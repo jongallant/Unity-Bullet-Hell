@@ -21,6 +21,7 @@ public class ProjectileManager : MonoBehaviour
 
     [SerializeField]
     private ProjectileEmitterBase[] EmittersArray;
+    private int MaxEmitters = 100;
 
     // Singleton
     private static ProjectileManager instance = null;
@@ -75,45 +76,71 @@ public class ProjectileManager : MonoBehaviour
                 ProjectileTypeCounters.Add(n, new ProjectileTypeCounters());
             }
 
+
+            EmittersArray = new ProjectileEmitterBase[MaxEmitters];
+
             // Get a list of all emitters in the scene
-            RefreshEmitters();
+            RegisterEmitters();
 
             Initialized = true;
         }
     }
 
-    public void RefreshEmitters()
+    public void AddEmitter(ProjectileEmitterBase emitter, int allocation)
+    {       
+        // Default projectile if no projectile type set
+        if (emitter.ProjectileType == null)
+            emitter.ProjectileType = GetProjectileType(0);
+
+        // Increment group counter
+        ProjectileTypeCounters[emitter.ProjectileType.Index].TotalGroups++;
+        
+        // Should be a way to not allocate more than projectile type will allow - across all emitters
+        emitter.Initialize(allocation);
+    }
+
+    public void RegisterEmitters()
     {
-        int oldLength = 0;
-        if (EmittersArray != null)
-            oldLength = EmittersArray.Length;
-
-        EmittersArray = GameObject.FindObjectsOfType<ProjectileEmitterBase>();
-
-        if (oldLength != EmittersArray.Length)
+        // Register Emitters that are currently in the scene
+        ProjectileEmitterBase[] emittersTemp = GameObject.FindObjectsOfType<ProjectileEmitterBase>();
+        for (int n = 0; n < emittersTemp.Length; n++)
         {
-            // reset group counter
-            for (int n = 0; n < ProjectileTypes.Count; n++)
-            {
-                ProjectileTypeCounters[ProjectileTypes[n].Index].TotalGroups = 0;
-            }
+            EmittersArray[n] = emittersTemp[n];
+            // Default projectile if no projectile type set
+            if (EmittersArray[n].ProjectileType == null)
+                EmittersArray[n].ProjectileType = GetProjectileType(0);
 
-            for (int n = 0; n < EmittersArray.Length; n++)
-            {
-                // Default projectile if no projectile type set
-                if (EmittersArray[n].ProjectileType == null)
-                    EmittersArray[n].ProjectileType = GetProjectileType(0);
+            // Increment group counter
+            ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalGroups++;
+        }
 
-                // Increment group counter
-                ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalGroups++;
-            }
-
-            // Initialize the emitters -- assigning each an equal distribution of allowed projectiles -- based on emitter count and MaxProjectiles set for this Projectile Type
-            for (int n = 0; n < EmittersArray.Length; n++)
+        // Initialize the emitters -- if value is set fo projectilePoolSize -- system will use it
+        // Make sure to not assign projectilePoolSize larger than total material type projectile count
+        for (int n = 0; n < EmittersArray.Length; n++)
+        {
+            if (EmittersArray[n] != null)
             {
-                EmittersArray[n].Initialize(EmittersArray[n].ProjectileType.MaxProjectileCount / ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalGroups);
+                int projectilesToAssign = EmittersArray[n].ProjectilePoolSize;
+                // Total projectiles value not set on Emitter, Calculate max based on total groups even distribution
+                if (projectilesToAssign < 0)
+                {
+                    projectilesToAssign = EmittersArray[n].ProjectileType.MaxProjectileCount / ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalGroups;
+                }
+                // Initialize Emitter pool size
+                EmittersArray[n].Initialize(projectilesToAssign);
+                ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalProjectilesAssigned += projectilesToAssign;
             }
         }
+
+        // Check assignments - output error if too many assigned
+        for (int n = 0; n < ProjectileTypes.Count; n++)
+        {
+            if (ProjectileTypeCounters[ProjectileTypes[n].Index].TotalProjectilesAssigned > ProjectileTypes[n].MaxProjectileCount)
+            {
+                Debug.Log("Projectile Type '" + ProjectileTypes[n].name + "' emitters assigned too many projectiles:  " + ProjectileTypeCounters[ProjectileTypes[n].Index].TotalProjectilesAssigned + " assigned with max of " + ProjectileTypes[n].MaxProjectileCount + ".  Reduce Max Projectiles on Emitters that use this projectile type.");
+            }
+        }
+
     }
 
     public ProjectileType GetProjectileType(int index)
@@ -135,7 +162,6 @@ public class ProjectileManager : MonoBehaviour
     
     public void Update()
     {
-        RefreshEmitters();
         UpdateEmitters();
         DrawEmitters();
         ResolveLeakedTime();
@@ -152,15 +178,18 @@ public class ProjectileManager : MonoBehaviour
 
         for (int n = 0; n < EmittersArray.Length; n++)
         {
-            if (EmittersArray[n].gameObject.activeSelf && EmittersArray[n].enabled)
+            if (EmittersArray[n] != null)
             {
-                EmittersArray[n].UpdateEmitter();
-                ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].ActiveProjectiles += EmittersArray[n].ActiveProjectileCount;
-            }
-            else
-            {
-                // if the gameobject was disabled then clear all projectiles from this emitter
-                EmittersArray[n].ClearAllProjectiles();
+                if (EmittersArray[n].gameObject.activeSelf && EmittersArray[n].enabled)
+                {
+                    EmittersArray[n].UpdateEmitter();
+                    ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].ActiveProjectiles += EmittersArray[n].ActiveProjectileCount;
+                }
+                else
+                {
+                    // if the gameobject was disabled then clear all projectiles from this emitter
+                    EmittersArray[n].ClearAllProjectiles();
+                }
             }
         }
     }
@@ -180,9 +209,12 @@ public class ProjectileManager : MonoBehaviour
         // When interval is elapsed we need to account for leaked time or our projectiles will not be synchronized properly
         for (int n = 0; n < EmittersArray.Length; n++)
         {
-            if (EmittersArray[n].gameObject.activeSelf && EmittersArray[n].enabled)
+            if (EmittersArray[n] != null)
             {
-                EmittersArray[n].ResolveLeakedTime();
+                if (EmittersArray[n].gameObject.activeSelf && EmittersArray[n].enabled)
+                {
+                    EmittersArray[n].ResolveLeakedTime();
+                }
             }
         }
     }
@@ -212,5 +244,6 @@ public class ProjectileManager : MonoBehaviour
 public class ProjectileTypeCounters
 {
     public int ActiveProjectiles;
+    public int TotalProjectilesAssigned;
     public int TotalGroups;
 }

@@ -38,7 +38,8 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     public ProjectileType ProjectileType;
 
     // Each emitter has its own ProjectileData pool
-    protected Pool<ProjectileData> Projectiles;    
+    protected Pool<ProjectileData> Projectiles;
+    public int ProjectilePoolSize = -1;
 
     // Collision layer
     private int LayerMask = 1;        
@@ -123,7 +124,7 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                     Vector2 deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick;
                     float distance = deltaPosition.magnitude;
 
-                    // Raycast towards where projectile is moving
+                    //Raycast towards where projectile is moving
                     if (Physics2D.Raycast(Projectiles.Nodes[i].Item.Position, deltaPosition, contactFilter, RaycastHitBuffer, distance) > 0)
                     {
                         // Put whatever hit code you want here such as damage events
@@ -145,14 +146,14 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                             ActiveProjectileCount++;
                         }
                         else
-                        {                            
+                        {
                             Projectiles.Nodes[i].Item.TimeToLive = -1;
                             Projectiles.Return(Projectiles.Nodes[i].NodeIndex);
                         }
                     }
                     else
                     {
-                        // No collision - move projectile
+                        //No collision -move projectile
                         Projectiles.Nodes[i].Item.Position += deltaPosition;
                         Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
 

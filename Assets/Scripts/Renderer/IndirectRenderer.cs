@@ -63,9 +63,16 @@ public class IndirectRenderer
 
     public void UpdateBufferData(int index, ProjectileData data)
     {
-        TransformData[index] = new Vector4(data.Position.x, data.Position.y, data.Scale, data.Rotation);
-        if (!StaticColor)
-            ColorData[index] = new Vector4(data.Color.r, data.Color.g, data.Color.b, data.Color.a);
+        if (index < TransformData.Length)
+        {
+            TransformData[index] = new Vector4(data.Position.x, data.Position.y, data.Scale, data.Rotation);
+            if (!StaticColor)
+                ColorData[index] = new Vector4(data.Color.r, data.Color.g, data.Color.b, data.Color.a);
+        }
+        else
+        {
+            Debug.Log("Error: Initialized more projectiles than Projectile Type allows.");
+        }
     }
 
     public void Draw(int activeProjectileCount)
