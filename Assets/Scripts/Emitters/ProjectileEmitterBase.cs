@@ -41,15 +41,21 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     protected Pool<ProjectileData> Projectiles;
     public int ProjectilePoolSize = -1;
 
+    public bool CullProjectilesOutsideCameraBounds;
+
     // Collision layer
     private int LayerMask = 1;        
     private RaycastHit2D[] RaycastHitBuffer = new RaycastHit2D[1];
 
     // Current active projectiles from this emitter
-    public int ActiveProjectileCount { get; private set; }   
+    public int ActiveProjectileCount { get; private set; }
+    
+    private Camera Camera;
 
     public void Start()
-    {         
+    {
+        Camera = Camera.main;
+
         Interval = INTERVAL;
 
         // If projectile type is not set, use default
@@ -123,6 +129,18 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                     // calculate where projectile will be at the end of this frame
                     Vector2 deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick;
                     float distance = deltaPosition.magnitude;
+
+                    // If flag set - return projectiles that are no longer in view 
+                    if (CullProjectilesOutsideCameraBounds)
+                    {
+                        Bounds bounds = new Bounds(Projectiles.Nodes[i].Item.Position, new Vector3(Projectiles.Nodes[i].Item.Scale/2f, Projectiles.Nodes[i].Item.Scale / 2f, Projectiles.Nodes[i].Item.Scale / 2f));
+                        var planes = GeometryUtility.CalculateFrustumPlanes(Camera);
+                        if (!GeometryUtility.TestPlanesAABB(planes, bounds))
+                        {
+                            Projectiles.Nodes[i].Item.TimeToLive = -1;
+                            Projectiles.Return(Projectiles.Nodes[i].NodeIndex);
+                        }
+                    }
 
                     //Raycast towards where projectile is moving
                     if (Physics2D.Raycast(Projectiles.Nodes[i].Item.Position, deltaPosition, contactFilter, RaycastHitBuffer, distance) > 0)

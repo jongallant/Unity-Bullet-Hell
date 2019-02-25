@@ -22,6 +22,7 @@ public class ProjectileManager : MonoBehaviour
     [SerializeField]
     private ProjectileEmitterBase[] EmittersArray;
     private int MaxEmitters = 100;
+    private int EmitterCount = 0;
 
     // Singleton
     private static ProjectileManager instance = null;
@@ -86,6 +87,7 @@ public class ProjectileManager : MonoBehaviour
         }
     }
 
+    // Adds a new emitter at runtime
     public void AddEmitter(ProjectileEmitterBase emitter, int allocation)
     {       
         // Default projectile if no projectile type set
@@ -97,12 +99,45 @@ public class ProjectileManager : MonoBehaviour
         
         // Should be a way to not allocate more than projectile type will allow - across all emitters
         emitter.Initialize(allocation);
+
+        EmitterCount++;
+    }
+
+    // Only should be used in DEBUG mode when adding Emitters during runtime
+    // This rebuilds the entire Emitters array -- If adding emitters at runtime you should use the AddEmitter method.
+    private void RefreshEmitters()
+    {        
+        ProjectileEmitterBase[] emittersTemp = GameObject.FindObjectsOfType<ProjectileEmitterBase>();
+
+        if (emittersTemp.Length != EmitterCount)
+        {
+            EmitterCount = 0;
+
+            // reset group counter
+            for (int n = 0; n < ProjectileTypes.Count; n++)
+            {
+                ProjectileTypeCounters[ProjectileTypes[n].Index].TotalGroups = 0;
+                ProjectileTypeCounters[ProjectileTypes[n].Index].TotalProjectilesAssigned = 0;
+            }
+
+            for (int n = 0; n < EmittersArray.Length; n++)
+            {
+                if (EmittersArray[n] != null)
+                {
+                    EmittersArray[n].ClearAllProjectiles();
+                    EmittersArray[n] = null;
+                }
+            }
+
+            RegisterEmitters();
+        }
     }
 
     public void RegisterEmitters()
     {
         // Register Emitters that are currently in the scene
         ProjectileEmitterBase[] emittersTemp = GameObject.FindObjectsOfType<ProjectileEmitterBase>();
+
         for (int n = 0; n < emittersTemp.Length; n++)
         {
             EmittersArray[n] = emittersTemp[n];
@@ -129,6 +164,8 @@ public class ProjectileManager : MonoBehaviour
                 // Initialize Emitter pool size
                 EmittersArray[n].Initialize(projectilesToAssign);
                 ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalProjectilesAssigned += projectilesToAssign;
+
+                EmitterCount++;
             }
         }
 
@@ -162,6 +199,12 @@ public class ProjectileManager : MonoBehaviour
     
     public void Update()
     {
+        // Provides a simple way to update active Emitters if removing/adding them at runtime for debugging purposes
+        // You should be using AddEmitter() if you want to add Emitters at runtime
+#if UNITY_EDITOR
+        RefreshEmitters();
+#endif
+
         UpdateEmitters();
         DrawEmitters();
         ResolveLeakedTime();
