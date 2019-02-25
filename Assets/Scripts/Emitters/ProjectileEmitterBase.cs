@@ -49,7 +49,11 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
 
     // Current active projectiles from this emitter
     public int ActiveProjectileCount { get; private set; }
-    
+
+    // For cull check
+    Plane[] Planes = new Plane[6];
+
+
     private Camera Camera;
 
     public void Start()
@@ -133,9 +137,9 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                     // If flag set - return projectiles that are no longer in view 
                     if (CullProjectilesOutsideCameraBounds)
                     {
-                        Bounds bounds = new Bounds(Projectiles.Nodes[i].Item.Position, new Vector3(Projectiles.Nodes[i].Item.Scale/2f, Projectiles.Nodes[i].Item.Scale / 2f, Projectiles.Nodes[i].Item.Scale / 2f));
-                        var planes = GeometryUtility.CalculateFrustumPlanes(Camera);
-                        if (!GeometryUtility.TestPlanesAABB(planes, bounds))
+                        Bounds bounds = new Bounds(Projectiles.Nodes[i].Item.Position, new Vector3(Projectiles.Nodes[i].Item.Scale, Projectiles.Nodes[i].Item.Scale, Projectiles.Nodes[i].Item.Scale));
+                        GeometryUtility.CalculateFrustumPlanes(Camera, Planes);
+                        if (!GeometryUtility.TestPlanesAABB(Planes, bounds))
                         {
                             Projectiles.Nodes[i].Item.TimeToLive = -1;
                             Projectiles.Return(Projectiles.Nodes[i].NodeIndex);
