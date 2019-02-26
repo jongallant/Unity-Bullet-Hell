@@ -118,6 +118,13 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
 
         ProjectileManager projectileManager = ProjectileManager.Instance;
 
+        //Update camera planes if needed
+        if (CullProjectilesOutsideCameraBounds)
+        {
+            GeometryUtility.CalculateFrustumPlanes(Camera, Planes);
+        }
+
+        // loop through all active projectile data
         for (int i = 0; i < Projectiles.Nodes.Length; i++)
         {
             if (Projectiles.Nodes[i].Active)
@@ -137,8 +144,7 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                     // If flag set - return projectiles that are no longer in view 
                     if (CullProjectilesOutsideCameraBounds)
                     {
-                        Bounds bounds = new Bounds(Projectiles.Nodes[i].Item.Position, new Vector3(Projectiles.Nodes[i].Item.Scale, Projectiles.Nodes[i].Item.Scale, Projectiles.Nodes[i].Item.Scale));
-                        GeometryUtility.CalculateFrustumPlanes(Camera, Planes);
+                        Bounds bounds = new Bounds(Projectiles.Nodes[i].Item.Position, new Vector3(Projectiles.Nodes[i].Item.Scale, Projectiles.Nodes[i].Item.Scale, Projectiles.Nodes[i].Item.Scale));                        
                         if (!GeometryUtility.TestPlanesAABB(Planes, bounds))
                         {
                             Projectiles.Nodes[i].Item.TimeToLive = -1;

@@ -290,6 +290,11 @@ PrefabInstance:
       propertyPath: ProjectilePoolSize
       value: 5000
       objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: CullProjectilesOutsideCameraBounds
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d3901bae36dc6884da48a493d489cb35, type: 3}
 --- !u!1 &519420028
@@ -431,6 +436,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: CullProjectilesOutsideCameraBounds
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f5de2ec52633851489395577541c20f5, type: 3}
