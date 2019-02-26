@@ -2,7 +2,7 @@
 An extremely efficient projectile and particle generator for Unity.
 
 ## What is it?
-![Animated Gif](http://www.jgallant.com/images/unitybullethell/projectiles.gif)
+![Animated Gif](http://www.jgallant.com/images/unitybullethell/demo2.gif)
 
 This system makes use of Unity's Graphics.DrawMeshInstancedIndirect functionality, resulting in a single draw call per Projectile Type.  This highly efficient system is able to handle an incredibly large number of projectiles at the same time.
 
@@ -13,7 +13,7 @@ This system is composed of a couple of parts.
 
 Two sample Materials are provided, but you can easily create your own to use.  The material you create must use the "ProjectileShader", in order for this system to work.  You must also make sure to select "Enable GPU Instancing", otherwise the GPU instancing will not work.  
 
-If you are not planning on changing the color of each instance of your projectiles, make sure to select "Static Color.  This will stop sending the Color data to the GPU, and increase performance.  If you want to be able to control the color of each individual instance, leave "Static Color" unchecked.
+If you are not planning on changing the color of each instance of your projectiles, make sure to select "Static Color".  This will stop sending the Color data to the GPU, and increase performance.  If you want to be able to control the color of each individual instance, leave "Static Color" unchecked.
 
 #### Projectile Type
 ![Projectile Example](http://www.jgallant.com/images/unitybullethell/projectile.png)
