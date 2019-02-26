@@ -12,6 +12,9 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     protected Vector2 Direction = Vector2.up;
 
     [SerializeField]
+    protected Vector2 Gravity = Vector2.zero;
+
+    [SerializeField]
     protected Gradient Color;
 
     [SerializeField]
@@ -136,6 +139,9 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                 {
                     // apply acceleration
                     Projectiles.Nodes[i].Item.Velocity *= (1 + Projectiles.Nodes[i].Item.Acceleration * tick);
+
+                    // apply gravity
+                    Projectiles.Nodes[i].Item.Velocity += Projectiles.Nodes[i].Item.Gravity * tick;
 
                     // calculate where projectile will be at the end of this frame
                     Vector2 deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick;

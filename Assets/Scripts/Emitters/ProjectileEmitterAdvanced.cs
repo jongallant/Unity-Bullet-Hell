@@ -60,6 +60,7 @@ public class ProjectileEmitterAdvanced : ProjectileEmitterBase
                         node.Item.Scale = Scale;
                         node.Item.TimeToLive = TimeToLive;
                         node.Item.Direction = Rotate(direction, rotation).normalized;
+                        node.Item.Gravity = Gravity;
                         node.Item.Velocity = Speed * Rotate(Groups[g].Direction, rotation).normalized;
                         node.Item.Position += node.Item.Velocity * leakedTime;
                         node.Item.Color = new Color(0.6f, 0.7f, 0.6f, 1);
@@ -72,6 +73,7 @@ public class ProjectileEmitterAdvanced : ProjectileEmitterBase
                         node.Item.Scale = Scale;
                         node.Item.TimeToLive = TimeToLive;
                         node.Item.Direction = Rotate(direction, rotation).normalized;
+                        node.Item.Gravity = Gravity;
                         node.Item.Velocity = Speed * Rotate(Groups[g].Direction, -rotation).normalized;
                         node.Item.Position += node.Item.Velocity * leakedTime;
                         node.Item.Color = new Color(0.6f, 0.7f, 0.6f, 1);
