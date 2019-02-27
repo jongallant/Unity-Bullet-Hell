@@ -14,25 +14,53 @@ public class ProjectileEmitterAdvanced : ProjectileEmitterBase
     [SerializeField]
     [Range(1, 100)]
     protected float SpokeSpacing = 40;
+
+    private int LastGroupCountPoll = -1;
          
     public new void Start()
     {
         base.Start();
+        Groups = new EmitterGroup[10];
         RefreshGroups();
     }
 
     private void RefreshGroups()
     {
-        if (Groups == null || Groups.Length != GroupCount)
+        if (Groups == null || LastGroupCountPoll != GroupCount)
         {
-            Groups = new EmitterGroup[GroupCount];
-            Vector2 direction = Direction;
             float rotation = 0;
-
+            for (int n = 0; n < Groups.Length; n++)
+            {               
+                if (n < GroupCount && Groups[n] == null)
+                {
+                    Groups[n] = new EmitterGroup(Rotate(Direction, rotation).normalized, SpokeCount, SpokeSpacing);
+                }
+                else if (n < GroupCount)
+                {
+                    Groups[n].Direction = Rotate(Direction, rotation).normalized;
+                    Groups[n].SpokeCount = SpokeCount;
+                    Groups[n].SpokeSpacing = SpokeSpacing;
+                }
+                else
+                {
+                    //n is greater than GroupCount -- ensure we clear the rest of the buffer
+                    Groups[n] = null;
+                }
+                rotation += 360 / GroupCount;
+            }
+            LastGroupCountPoll = GroupCount;
+        }
+        else if (RotationSpeed == 0)
+        {
+            float rotation = 0;
+            // If rotation speed is locked, then allow to update Direction of groups
             for (int n = 0; n < Groups.Length; n++)
             {
-                Groups[n] = new EmitterGroup(Rotate(direction, rotation).normalized, SpokeCount, SpokeSpacing);
-                rotation += 360 / Groups.Length;
+                if (Groups[n] != null)
+                {
+                    Groups[n].Direction = Rotate(Direction, rotation).normalized;
+                }
+                rotation += 360 / GroupCount;
             }
         }
     }
@@ -40,7 +68,7 @@ public class ProjectileEmitterAdvanced : ProjectileEmitterBase
     protected override void FireProjectile(Vector2 direction, float leakedTime)
     {
         //rebuild groups if value was changed (creates garbage - only for debug)
-        if (GroupCount != Groups.Length)
+        //if (GroupCount != Groups.Length)
             RefreshGroups();
 
         for (int g = 0; g < GroupCount; g++)

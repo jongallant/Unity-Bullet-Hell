@@ -15,6 +15,9 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     protected Vector2 Gravity = Vector2.zero;
 
     [SerializeField]
+    protected Vector2 BounceAbsorbtion = Vector2.zero;
+
+    [SerializeField]
     protected Gradient Color;
 
     [SerializeField]
@@ -55,7 +58,6 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
 
     // For cull check
     Plane[] Planes = new Plane[6];
-
 
     private Camera Camera;
 
@@ -174,6 +176,9 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
 
                             Projectiles.Nodes[i].Item.Position = RaycastHitBuffer[0].centroid + deltaPosition;
                             Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
+
+                            // Absorbs energy from bounce
+                            Projectiles.Nodes[i].Item.Velocity = new Vector2(Mathf.Lerp(Projectiles.Nodes[i].Item.Velocity.x, 0, BounceAbsorbtion.x), Mathf.Lerp(Projectiles.Nodes[i].Item.Velocity.y, 0, BounceAbsorbtion.y));
 
                             projectileManager.UpdateBufferData(ActiveProjectileCount, ProjectileType, Projectiles.Nodes[i].Item);
 
