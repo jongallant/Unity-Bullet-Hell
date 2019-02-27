@@ -78,9 +78,9 @@ public class IndirectRenderer
     public void Draw(int activeProjectileCount)
     {
         // Update our compute buffers with latest data 
-        TransformBuffer.SetData(TransformData);
+        TransformBuffer.SetData(TransformData, 0, 0, activeProjectileCount);
         if (!StaticColor)
-            ColorBuffer.SetData(ColorData);
+            ColorBuffer.SetData(ColorData, 0, 0, activeProjectileCount);
         args[1] = (uint)activeProjectileCount;
         ArgsBuffer.SetData(args);
 
