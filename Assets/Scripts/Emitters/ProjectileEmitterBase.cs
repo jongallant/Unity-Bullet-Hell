@@ -40,14 +40,15 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     [SerializeField]
     protected float RotationSpeed = 0;
 
-    public bool BounceOffSurfaces;
+    public bool AutoFire = true;
+    public bool BounceOffSurfaces = true;
     public ProjectileType ProjectileType;
 
     // Each emitter has its own ProjectileData pool
     protected Pool<ProjectileData> Projectiles;
     public int ProjectilePoolSize = -1;
 
-    public bool CullProjectilesOutsideCameraBounds;
+    public bool CullProjectilesOutsideCameraBounds = true;
 
     // Collision layer
     private int LayerMask = 1;        
@@ -79,19 +80,25 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
 
     public void UpdateEmitter()
     {
-        Interval -= Time.deltaTime;
+        if (AutoFire)
+        {
+            Interval -= Time.deltaTime;
+        }
         UpdateProjectiles(Time.deltaTime);
     }
 
     public void ResolveLeakedTime()
     {
-        // Spawn in new projectiles for next frame
-        while (Interval <= 0)
+        if (AutoFire)
         {
-            float leakedTime = Mathf.Abs(Interval);
-            Interval += INTERVAL;
-            FireProjectile(Direction, leakedTime);
-        }
+            // Spawn in new projectiles for next frame
+            while (Interval <= 0)
+            {
+                float leakedTime = Mathf.Abs(Interval);
+                Interval += INTERVAL;
+                FireProjectile(Direction, leakedTime);
+            }
+        }        
     }
     
     // Function to rotate a vector by x degrees
