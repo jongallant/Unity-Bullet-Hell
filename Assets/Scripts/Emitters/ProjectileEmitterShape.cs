@@ -27,7 +27,7 @@ public class ProjectileEmitterShape : ProjectileEmitterBase
         base.Start();        
     }
 
-    protected override void FireProjectile(Vector2 direction, float leakedTime)
+    public override void FireProjectile(Vector2 direction, float leakedTime)
     {
         if (Projectiles.AvailableCount >= TemplatePositions.Count)
         {

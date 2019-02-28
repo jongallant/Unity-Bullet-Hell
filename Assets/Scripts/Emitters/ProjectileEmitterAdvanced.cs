@@ -2,18 +2,15 @@
 
 public class ProjectileEmitterAdvanced : ProjectileEmitterBase
 {
-    [SerializeField]
     [Range(1, 10)]
-    protected int GroupCount = 1;
+    public int GroupCount = 1;
     private EmitterGroup[] Groups;
 
-    [SerializeField]
     [Range(1, 10)]
-    protected int SpokeCount = 3;
+    public int SpokeCount = 3;
 
-    [SerializeField]
     [Range(1, 100)]
-    protected float SpokeSpacing = 40;
+    public float SpokeSpacing = 40;
 
     private int LastGroupCountPoll = -1;
          
@@ -26,6 +23,12 @@ public class ProjectileEmitterAdvanced : ProjectileEmitterBase
 
     private void RefreshGroups()
     {
+        if (GroupCount > 10)
+        {
+            Debug.Log("Max Group Count is set to 10.  You attempted to set it to " + GroupCount.ToString() + ".");
+            return;
+        }
+
         if (Groups == null || LastGroupCountPoll != GroupCount)
         {
             float rotation = 0;
@@ -64,8 +67,8 @@ public class ProjectileEmitterAdvanced : ProjectileEmitterBase
             }
         }
     }
-    
-    protected override void FireProjectile(Vector2 direction, float leakedTime)
+
+    public override void FireProjectile(Vector2 direction, float leakedTime)
     {
         //rebuild groups if value was changed (creates garbage - only for debug)
         //if (GroupCount != Groups.Length)

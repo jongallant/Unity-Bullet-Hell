@@ -5,51 +5,36 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     private Mesh Mesh;
     private Material Material;
 
-    [SerializeField]
-    protected float TimeToLive = 5;
+    public float TimeToLive = 5;
+    public Vector2 Direction = Vector2.up;
+    public Vector2 Gravity = Vector2.zero;
+    public Vector2 BounceAbsorbtion = Vector2.zero;
+    public Gradient Color;
 
-    [SerializeField]
-    protected Vector2 Direction = Vector2.up;
-
-    [SerializeField]
-    protected Vector2 Gravity = Vector2.zero;
-
-    [SerializeField]
-    protected Vector2 BounceAbsorbtion = Vector2.zero;
-
-    [SerializeField]
-    protected Gradient Color;
-
-    [SerializeField]
     [Range(0.001f, 5f)]
-    protected float INTERVAL = 0.1f;
+    public float INTERVAL = 0.1f;
     private float Interval;
 
-    [SerializeField]
     [Range(0.001f, 10f)]
-    protected float Speed = 1;
+    public float Speed = 1;
 
-    [SerializeField]
     [Range(-10f, 10f)]
-    protected float Acceleration = 0;
+    public float Acceleration = 0;
 
-    [SerializeField]
     [Range(0.01f, 2f)]
-    protected float Scale = 0.05f;
+    public float Scale = 0.05f;
     
-    [SerializeField]
-    protected float RotationSpeed = 0;
-
+    public float RotationSpeed = 0;
     public bool AutoFire = true;
     public bool BounceOffSurfaces = true;
     public ProjectileType ProjectileType;
-
-    // Each emitter has its own ProjectileData pool
-    protected Pool<ProjectileData> Projectiles;
-    public int ProjectilePoolSize = -1;
-
     public bool CullProjectilesOutsideCameraBounds = true;
 
+    //If set to -1 -- projectile pool size will be auto-calculated
+    public int ProjectilePoolSize = -1;
+    // Each emitter has its own ProjectileData pool
+    protected Pool<ProjectileData> Projectiles;
+   
     // Collision layer
     private int LayerMask = 1;        
     private RaycastHit2D[] RaycastHitBuffer = new RaycastHit2D[1];
@@ -59,7 +44,6 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
 
     // For cull check
     Plane[] Planes = new Plane[6];
-
     private Camera Camera;
 
     public void Start()
@@ -116,7 +100,7 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
         return v;
     }
 
-    protected abstract void FireProjectile(Vector2 direction, float leakedTime);
+    public abstract void FireProjectile(Vector2 direction, float leakedTime);
  
     private void UpdateProjectiles(float tick)
     {

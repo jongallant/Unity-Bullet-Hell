@@ -8,7 +8,7 @@ public class ProjectileEmitterBasic : ProjectileEmitterBase
         base.Start();        
     }
 
-    protected override void FireProjectile(Vector2 direction, float leakedTime)
+    public override void FireProjectile(Vector2 direction, float leakedTime)
     {
         Pool<ProjectileData>.Node node = Projectiles.Get();
 
