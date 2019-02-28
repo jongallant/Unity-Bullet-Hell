@@ -1,5 +1,11 @@
 ﻿using UnityEngine;
 
+public enum CollisionDetectionType
+{
+    Raycast,
+    CircleCast
+};
+
 public abstract class ProjectileEmitterBase : MonoBehaviour
 {
     private Mesh Mesh;
@@ -29,6 +35,7 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     public bool BounceOffSurfaces = true;
     public ProjectileType ProjectileType;
     public bool CullProjectilesOutsideCameraBounds = true;
+    public CollisionDetectionType CollisionDetection = CollisionDetectionType.CircleCast;
 
     //If set to -1 -- projectile pool size will be auto-calculated
     public int ProjectilePoolSize = -1;
@@ -151,8 +158,22 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                         }
                     }
 
-                    //Raycast towards where projectile is moving
-                    if (Physics2D.Raycast(Projectiles.Nodes[i].Item.Position, deltaPosition, contactFilter, RaycastHitBuffer, distance) > 0)
+                    int result = -1;
+                    if (CollisionDetection == CollisionDetectionType.Raycast)
+                    {
+                        result = Physics2D.Raycast(Projectiles.Nodes[i].Item.Position, deltaPosition, contactFilter, RaycastHitBuffer, distance);
+                    }
+                    else if (CollisionDetection == CollisionDetectionType.CircleCast)
+                    {
+                        result = Physics2D.CircleCast(Projectiles.Nodes[i].Item.Position, Projectiles.Nodes[i].Item.Scale / 2f, Projectiles.Nodes[i].Item.Velocity, contactFilter, RaycastHitBuffer, distance);
+                        if (result > 0 && RaycastHitBuffer[0].distance == 0)
+                        {
+                            result = -1;
+                        }                        
+                    }
+
+
+                    if (result > 0)
                     {
                         // Put whatever hit code you want here such as damage events
 
@@ -161,10 +182,11 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
                         {
                             // rudementary bounce -- will work well on static surfaces
                             Projectiles.Nodes[i].Item.Velocity = Vector2.Reflect(Projectiles.Nodes[i].Item.Velocity, RaycastHitBuffer[0].normal);
+
                             // what fraction of the distance do we still have to move this frame?
                             float leakedFraction = 1f - RaycastHitBuffer[0].distance / distance;
-                            deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick * leakedFraction;
 
+                            deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick * leakedFraction;
                             Projectiles.Nodes[i].Item.Position = RaycastHitBuffer[0].centroid + deltaPosition;
                             Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
 
