@@ -50,6 +50,12 @@ public class ProjectileManager : MonoBehaviour
         Instance.Initialize();
     }
 
+    [RuntimeInitializeOnLoadMethod]
+    static void EnableInstance()
+    {
+        Instance.Initialized = false;
+    }
+
     void Initialize()
     {
         if (!Initialized)

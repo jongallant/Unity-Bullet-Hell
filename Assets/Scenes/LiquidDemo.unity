@@ -284,7 +284,7 @@ MonoBehaviour:
   Speed: 4.95
   Acceleration: 0
   Scale: 0.05
-  RotationSpeed: 3.91
+  RotationSpeed: 1
   BounceOffSurfaces: 1
   ProjectileType: {fileID: 545596377748671019, guid: 70930bc239ea32b44a88214c58f621a1,
     type: 3}
