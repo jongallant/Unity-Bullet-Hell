@@ -37,7 +37,7 @@ public class ProjectileEmitterShape : ProjectileEmitterBase
 
                 node.Item.Position = transform.position + TemplatePositions[n];
                 node.Item.Scale = Scale;
-                node.Item.TimeToLive = TimeToLive;
+                node.Item.TimeToLive = TimeToLive - leakedTime;
                 node.Item.Direction = direction.normalized;
                 node.Item.Velocity = Speed * Direction.normalized;
                 node.Item.Position += node.Item.Velocity * leakedTime;

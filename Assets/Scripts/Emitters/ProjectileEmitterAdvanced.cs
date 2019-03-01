@@ -70,9 +70,7 @@ public class ProjectileEmitterAdvanced : ProjectileEmitterBase
 
     public override void FireProjectile(Vector2 direction, float leakedTime)
     {
-        //rebuild groups if value was changed (creates garbage - only for debug)
-        //if (GroupCount != Groups.Length)
-            RefreshGroups();
+        RefreshGroups();
 
         for (int g = 0; g < GroupCount; g++)
         {
@@ -89,7 +87,7 @@ public class ProjectileEmitterAdvanced : ProjectileEmitterBase
                     {
                         node.Item.Position = transform.position;
                         node.Item.Scale = Scale;
-                        node.Item.TimeToLive = TimeToLive;
+                        node.Item.TimeToLive = TimeToLive - leakedTime;
                         node.Item.Direction = Rotate(direction, rotation).normalized;
                         node.Item.Gravity = Gravity;
                         node.Item.Velocity = Speed * Rotate(Groups[g].Direction, rotation).normalized;
@@ -102,7 +100,7 @@ public class ProjectileEmitterAdvanced : ProjectileEmitterBase
                     {
                         node.Item.Position = transform.position;
                         node.Item.Scale = Scale;
-                        node.Item.TimeToLive = TimeToLive;
+                        node.Item.TimeToLive = TimeToLive - leakedTime; 
                         node.Item.Direction = Rotate(direction, rotation).normalized;
                         node.Item.Gravity = Gravity;
                         node.Item.Velocity = Speed * Rotate(Groups[g].Direction, -rotation).normalized;
