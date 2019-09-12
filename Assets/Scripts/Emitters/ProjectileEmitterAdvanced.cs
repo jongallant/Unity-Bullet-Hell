@@ -13,11 +13,16 @@ public class ProjectileEmitterAdvanced : ProjectileEmitterBase
     public float SpokeSpacing = 40;
 
     private int LastGroupCountPoll = -1;
-         
+    
+    public new void Awake()
+    {
+        base.Awake();
+        Groups = new EmitterGroup[10];
+    }
+    
     public new void Start()
     {
         base.Start();
-        Groups = new EmitterGroup[10];
         RefreshGroups();
     }
 

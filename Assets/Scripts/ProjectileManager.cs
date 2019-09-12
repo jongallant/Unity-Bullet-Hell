@@ -162,11 +162,22 @@ public class ProjectileManager : MonoBehaviour
             if (EmittersArray[n] != null)
             {
                 int projectilesToAssign = EmittersArray[n].ProjectilePoolSize;
-                // Total projectiles value not set on Emitter, Calculate max based on total groups even distribution
-                if (projectilesToAssign < 0)
+
+                if (projectilesToAssign == -1)
                 {
-                    projectilesToAssign = EmittersArray[n].ProjectileType.MaxProjectileCount / ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalGroups;
+                    EmittersArray[n].ProjectilePoolSize = 1000;
+                    projectilesToAssign = 1000;
                 }
+
+                // Old code to auto assign pool sizes based on total Projectile Group -- would split allocation across all emitters.
+                // This turns out to be problematic when adding/removing emitters on the fly.
+                // New system will allocate per the emitter.
+
+                // Total projectiles value not set on Emitter, Calculate max based on total groups even distribution
+                //if (projectilesToAssign < 0)
+                //{
+                //    projectilesToAssign = EmittersArray[n].ProjectileType.MaxProjectileCount / ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalGroups;
+                //}
                 // Initialize Emitter pool size
                 EmittersArray[n].Initialize(projectilesToAssign);
                 ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalProjectilesAssigned += projectilesToAssign;
@@ -182,6 +193,52 @@ public class ProjectileManager : MonoBehaviour
             {
                 Debug.Log("Projectile Type '" + ProjectileTypes[n].name + "' emitters assigned too many projectiles:  " + ProjectileTypeCounters[ProjectileTypes[n].Index].TotalProjectilesAssigned + " assigned with max of " + ProjectileTypes[n].MaxProjectileCount + ".  Reduce Max Projectiles on Emitters that use this projectile type.");
             }
+        }
+
+    }
+    
+    // When adding emitter during play mode - you can register them with this function
+    public void RegisterEmitter(ProjectileEmitterBase emitter)
+    {
+        // Should probably use Emittercount here
+        int nextEmpty = -1;
+        for (int n = 0; n < EmittersArray.Length; n++)
+        {
+            if (EmittersArray[n] == null)
+                nextEmpty = n;
+        }
+
+        if (nextEmpty == -1)
+        {
+            Debug.Log("Max Emitters reached.  Raise MaxEmitters if you need more.  Max set to " + MaxEmitters + ".");
+        }
+        else
+        {
+            EmittersArray[nextEmpty] = emitter;
+            ProjectileTypeCounters[emitter.ProjectileType.Index].TotalGroups++;
+            
+            int projectilesToAssign = emitter.ProjectilePoolSize;
+
+            if (projectilesToAssign == -1)
+            {
+                emitter.ProjectilePoolSize = 1000;
+                projectilesToAssign = 1000;
+            }
+
+            // Old code to auto assign pool sizes based on total Projectile Group -- would split allocation across all emitters.
+            // This turns out to be problematic when adding/removing emitters on the fly.
+            // New system will allocate per the emitter.
+
+            // Total projectiles value not set on Emitter, Calculate max based on total groups even distribution
+            //if (projectilesToAssign < 0)
+            //{
+            //    projectilesToAssign = emitter.ProjectileType.MaxProjectileCount / ProjectileTypeCounters[emitter.ProjectileType.Index].TotalGroups;
+            //}
+            // Initialize Emitter pool size
+            emitter.Initialize(projectilesToAssign);
+            ProjectileTypeCounters[emitter.ProjectileType.Index].TotalProjectilesAssigned += projectilesToAssign;
+
+            EmitterCount++;
         }
 
     }
@@ -205,6 +262,15 @@ public class ProjectileManager : MonoBehaviour
     
     public void Update()
     {
+        // Example of adding an emitter at runtime
+        //if (Input.GetKeyDown(KeyCode.F))
+        //{
+        //    GameObject go = GameObject.Instantiate(Resources.Load("Emitters/Spinner") as GameObject);
+        //    go.transform.position = new Vector2(1, 0);
+        //    AddEmitter(go.GetComponent<ProjectileEmitterAdvanced>(), 1000);
+        //    RegisterEmitter(go.GetComponent<ProjectileEmitterAdvanced>());
+        //}
+
         // Provides a simple way to update active Emitters if removing/adding them at runtime for debugging purposes
         // You should be using AddEmitter() if you want to add Emitters at runtime
 #if UNITY_EDITOR

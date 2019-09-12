@@ -38,7 +38,8 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     public CollisionDetectionType CollisionDetection = CollisionDetectionType.CircleCast;
 
     //If set to -1 -- projectile pool size will be auto-calculated
-    public int ProjectilePoolSize = -1;
+    [Range(1, 1000000)]
+    public int ProjectilePoolSize = 1000;
     // Each emitter has its own ProjectileData pool
     protected Pool<ProjectileData> Projectiles;
    
@@ -53,10 +54,13 @@ public abstract class ProjectileEmitterBase : MonoBehaviour
     Plane[] Planes = new Plane[6];
     private Camera Camera;
 
-    public void Start()
+    public void Awake()
     {
         Camera = Camera.main;
+    }
 
+    public void Start()
+    {
         Interval = INTERVAL;
 
         // If projectile type is not set, use default
