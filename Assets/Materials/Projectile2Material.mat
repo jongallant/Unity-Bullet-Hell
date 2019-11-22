@@ -78,6 +78,7 @@ Material:
     - _SrcBlend: 1
     - _StaticColor: 0
     - _UVSec: 0
+    - _ZIndex: 0.05
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}

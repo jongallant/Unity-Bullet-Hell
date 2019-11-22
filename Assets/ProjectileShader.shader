@@ -6,8 +6,8 @@
     [HideInInspector] _Flip ("Flip", Vector) = (1,1,1,1)
     [PerRendererData] _AlphaTex ("External Alpha", 2D) = "white" {}
     [PerRendererData] _EnableExternalAlpha ("Enable External Alpha", Float) = 0
-	[Toggle(STATIC_COLOR)]
-	_StaticColor ("Static Color", Float) = 0
+	[Toggle(STATIC_COLOR)] _StaticColor ("Static Color", Float) = 0
+	[PowerSlider(1.0)] _ZIndex("ZIndex", Range(0.01, 1)) = 0.01
   }
 
   SubShader {
@@ -21,7 +21,7 @@
 
     Cull Off
     Lighting Off
-    ZWrite Off
+    ZWrite On
     Blend One OneMinusSrcAlpha
 
     Pass {
@@ -65,23 +65,27 @@
             UNITY_VERTEX_OUTPUT_STEREO
         };
 
+		fixed _ZIndex;
+
         void setup() {
-        #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
+        #if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)
 
           float4 position = positionBuffer[unity_InstanceID];
+
           float cosR = cos(position.w) * position.z;
           float sinR = sin(position.w) * position.z;
 		  		  				  
           unity_ObjectToWorld = float4x4(
             cosR, -sinR, 0, position.x,
             sinR,  cosR, 0, position.y,
-               0,     0, 1,          0,
-               0,     0, 0,          1
+               0,     0, 0,          -_ZIndex,
+               0,     0, 0,          1.00f
           );
 
           unity_WorldToObject = unity_ObjectToWorld;
           unity_WorldToObject._14_24_34 *= -1;
           unity_WorldToObject._11_22_33 = 1.0f / unity_WorldToObject._11_22_33;
+
         #endif
         }
 
@@ -97,7 +101,6 @@
             OUT.vertex = UnityObjectToClipPos(IN.vertex);
             OUT.texcoord = IN.texcoord;
 
-			
 		#if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED) && !defined(STATIC_COLOR)
 			OUT.color = IN.color * colorBuffer[unity_InstanceID];
 		#else 

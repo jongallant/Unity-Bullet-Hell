@@ -492,6 +492,16 @@ PrefabInstance:
       propertyPath: CollisionDetection
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.atime0
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.atime1
+      value: 65535
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f5de2ec52633851489395577541c20f5, type: 3}
 --- !u!1 &1319106036
