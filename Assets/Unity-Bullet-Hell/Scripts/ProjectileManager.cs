@@ -67,12 +67,13 @@ namespace BulletHell
                 ProjectileTypes = new List<ProjectileType>();
                 IndirectRenderers = new Dictionary<int, IndirectRenderer>();
                 ProjectileTypeCounters = new Dictionary<int, ProjectileTypeCounters>();
-
+                                             
                 // Process projectile types
+                int currentIndex = 0;
                 for (int n = 0; n < projectileTypes.Length; n++)
                 {
                     ProjectileType type = projectileTypes[n].GetComponent<ProjectileType>();
-                    type.SetIndex(n);
+                    type.Initialize(currentIndex);
                     ProjectileTypes.Add(type);
 
                     // If material is set to be a static color ensure we do not send color data to shader
@@ -81,10 +82,29 @@ namespace BulletHell
                     if (isStaticFloat == 1)
                         isStatic = true;
 
-                    IndirectRenderers.Add(n, new IndirectRenderer(type.MaxProjectileCount, type.Material, type.Mesh, isStatic));
-                    ProjectileTypeCounters.Add(n, new ProjectileTypeCounters());
-                }
+                    IndirectRenderers.Add(currentIndex, new IndirectRenderer(type.MaxProjectileCount, type.Material, type.Mesh, isStatic));
+                    ProjectileTypeCounters.Add(currentIndex, new ProjectileTypeCounters());
 
+                    currentIndex++;
+                    
+                    //if type has a shadow add another renderer for it
+                    if (type.Border != null)
+                    {
+                        type.Border.Initialize(currentIndex);
+                        ProjectileTypes.Add(type.Border);
+
+                        // If material is set to be a static color ensure we do not send color data to shader
+                        isStaticFloat = type.Border.Material.GetFloat("_StaticColor");
+                        isStatic = false;
+                        if (isStaticFloat == 1)
+                            isStatic = true;
+
+                        IndirectRenderers.Add(currentIndex, new IndirectRenderer(type.MaxProjectileCount, type.Border.Material, type.Border.Mesh, isStatic));
+                        ProjectileTypeCounters.Add(currentIndex, new ProjectileTypeCounters());
+
+                        currentIndex++;
+                    }
+                }
 
                 EmittersArray = new ProjectileEmitterBase[MaxEmitters];
 
@@ -250,7 +270,7 @@ namespace BulletHell
             return ProjectileTypes[index];
         }
 
-        public void UpdateBufferData(int index, ProjectileType projectileType, ProjectileData data)
+        public void UpdateBufferData(ProjectileType projectileType, ProjectileData data)
         {
             if (projectileType.Index != LastAccessedProjectileTypeIndex)
             {
@@ -300,7 +320,13 @@ namespace BulletHell
                     if (EmittersArray[n].gameObject.activeSelf && EmittersArray[n].enabled)
                     {
                         EmittersArray[n].UpdateEmitter();
+
+                        // Update projectile counters
                         ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].ActiveProjectiles += EmittersArray[n].ActiveProjectileCount;
+
+                        // Border set? Update it too.
+                        if (EmittersArray[n].ProjectileType.Border != null)
+                            ProjectileTypeCounters[EmittersArray[n].ProjectileType.Border.Index].ActiveProjectiles += EmittersArray[n].ActiveBorderCount;
                     }
                     else
                     {
@@ -317,7 +343,13 @@ namespace BulletHell
             for (int n = 0; n < ProjectileTypes.Count; n++)
             {
                 if (ProjectileTypeCounters[ProjectileTypes[n].Index].ActiveProjectiles > 0)
+                {
+                    if (ProjectileTypes[n].Border != null)
+                    {
+                        IndirectRenderers[ProjectileTypes[n].Border.Index].Draw(ProjectileTypeCounters[ProjectileTypes[n].Border.Index].ActiveProjectiles);
+                    }
                     IndirectRenderers[ProjectileTypes[n].Index].Draw(ProjectileTypeCounters[ProjectileTypes[n].Index].ActiveProjectiles);
+                }
             }
         }
 
@@ -338,7 +370,12 @@ namespace BulletHell
 
         void OnGUI()
         {
-            GUI.Label(new Rect(5, 5, 300, 20), "Projectiles: " + ProjectileTypeCounters[0].ActiveProjectiles.ToString());
+            int total = 0;
+            for (int n = 0; n < ProjectileTypeCounters.Count; n++)
+            {
+                total += ProjectileTypeCounters[n].ActiveProjectiles;
+            }
+            GUI.Label(new Rect(5, 5, 300, 20), "Projectiles: " + total.ToString());
         }
 
         void OnApplicationQuit()

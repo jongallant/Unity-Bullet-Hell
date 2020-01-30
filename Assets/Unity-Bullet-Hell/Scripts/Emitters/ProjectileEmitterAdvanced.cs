@@ -4,16 +4,12 @@ namespace BulletHell
 {
     public class ProjectileEmitterAdvanced : ProjectileEmitterBase
     {
-        [Range(1, 10)]
-        public int GroupCount = 1;
+        [Header("Spokes")]
+        [Range(1, 10), SerializeField] protected int GroupCount = 1;        
+        [Range(1, 10), SerializeField] protected int SpokeCount = 3;
+        [Range(1, 100), SerializeField] protected float SpokeSpacing = 40;
+
         private EmitterGroup[] Groups;
-
-        [Range(1, 10)]
-        public int SpokeCount = 3;
-
-        [Range(1, 100)]
-        public float SpokeSpacing = 40;
-
         private int LastGroupCountPoll = -1;
 
         public new void Awake()
@@ -99,7 +95,7 @@ namespace BulletHell
                             node.Item.Gravity = Gravity;
                             node.Item.Velocity = Speed * Rotate(Groups[g].Direction, rotation).normalized;
                             node.Item.Position += node.Item.Velocity * leakedTime;
-                            node.Item.Color = new Color(0.6f, 0.7f, 0.6f, 1);
+                            node.Item.Color = Color.Evaluate(0);
                             node.Item.Acceleration = Acceleration;
                             rotation += SpokeSpacing;
                         }
@@ -112,8 +108,25 @@ namespace BulletHell
                             node.Item.Gravity = Gravity;
                             node.Item.Velocity = Speed * Rotate(Groups[g].Direction, -rotation).normalized;
                             node.Item.Position += node.Item.Velocity * leakedTime;
-                            node.Item.Color = new Color(0.6f, 0.7f, 0.6f, 1);
+                            node.Item.Color = Color.Evaluate(0);
                             node.Item.Acceleration = Acceleration;
+                        }
+
+                        if (ProjectileType.Border != null && DrawBorders)
+                        {
+                            Pool<ProjectileData>.Node borderNode = ProjectileBorders.Get();
+
+                            borderNode.Item.Position = node.Item.Position;
+                            borderNode.Item.Scale = node.Item.Scale + BorderSize;
+                            borderNode.Item.TimeToLive = node.Item.TimeToLive;
+                            borderNode.Item.Direction = node.Item.Direction;
+                            borderNode.Item.Gravity = node.Item.Gravity;
+                            borderNode.Item.Velocity = node.Item.Velocity;
+                            borderNode.Item.Position = node.Item.Position;
+                            borderNode.Item.Color = BorderColor.Evaluate(0);
+                            borderNode.Item.Acceleration = node.Item.Acceleration;
+
+                            node.Item.Border = borderNode;
                         }
 
                         left = !left;

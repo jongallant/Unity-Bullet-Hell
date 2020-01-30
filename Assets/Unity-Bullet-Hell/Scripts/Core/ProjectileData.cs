@@ -13,5 +13,7 @@ namespace BulletHell
         public Color Color;
         public float Scale;
         public float TimeToLive;
+
+        public Pool<ProjectileData>.Node Border;
     }
 }

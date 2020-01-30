@@ -11,9 +11,14 @@ namespace BulletHell
         public int MaxProjectileCount;
         public int ActiveProjectileCount;
 
-        public void SetIndex(int index)
+        public ProjectileType Border;
+
+        public void Initialize(int index)
         {
             Index = index;
+            Material = new Material(Shader.Find("ProjectileShader"));
+            Material.enableInstancing = true;
+            Material.SetFloat("_StaticColor", 0);
         }
     }
 }

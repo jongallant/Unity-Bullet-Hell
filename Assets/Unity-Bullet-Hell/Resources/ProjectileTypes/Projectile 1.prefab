@@ -45,6 +45,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BufferIndex: 0
   Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  Material: {fileID: 2100000, guid: 97f4f3c99dabeb643ab4fb800af62e7c, type: 2}
+  Material: {fileID: 0}
   MaxProjectileCount: 50000
   ActiveProjectileCount: 0
+  Shadow: {fileID: 0}
