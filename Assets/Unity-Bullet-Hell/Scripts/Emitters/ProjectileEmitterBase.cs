@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+
 namespace BulletHell
 {
     public enum CollisionDetectionType
@@ -13,32 +14,45 @@ namespace BulletHell
         private Mesh Mesh;
         private Material Material;
         private float Interval;
+        private float StaticPulseTime;
+        private bool StaticPulseDown;
+        private const float PULSE_TIME = 10;
+
+        private float OutlineStaticPulseTime;
+        private bool OutlineStaticPulseDown;
 
         // Each emitter has its own ProjectileData pool
         protected Pool<ProjectileData> Projectiles;
-        protected Pool<ProjectileData> ProjectileBorders;
+        protected Pool<ProjectileData> ProjectileOutlines;
 
-        [Header("General")]
+        [SerializeField] public ProjectilePrefab ProjectilePrefab;
+
+        [Foldout("General", true)]
         [Range(0.001f, 5f), SerializeField] protected float INTERVAL = 0.1f;
-        [SerializeField] protected float TimeToLive = 5;
         [SerializeField] protected Vector2 Direction = Vector2.up;
+        [SerializeField] protected float TimeToLive = 5;        
         [Range(0.001f, 10f), SerializeField] protected float Speed = 1;
         [Range(0.01f, 2f), SerializeField] protected float Scale = 0.05f;
         [SerializeField] protected Gradient Color;
+        [SerializeField] public bool UseColorPulse;
+        [ConditionalField(nameof(UseColorPulse)), SerializeField] protected float PulseSpeed;
+        [ConditionalField(nameof(UseColorPulse)), SerializeField] protected bool UseStaticPulse;
         [SerializeField] protected float RotationSpeed = 0;
         [SerializeField] protected bool AutoFire = true;
-        [SerializeField] protected bool BounceOffSurfaces = true;
-        [SerializeField] public ProjectileType ProjectileType;
+        [SerializeField] protected bool BounceOffSurfaces = true;        
         [SerializeField] protected bool CullProjectilesOutsideCameraBounds = true;
         [SerializeField] protected CollisionDetectionType CollisionDetection = CollisionDetectionType.CircleCast;        
         [Range(1, 1000000), SerializeField] public int ProjectilePoolSize = 1000;
 
-        [Header("Border")]
-        [SerializeField] public bool DrawBorders;
-        [Range(0.0f, 1f), SerializeField] protected float BorderSize;
-        [SerializeField] protected Gradient BorderColor;
-        
-        [Header("Modifiers")]
+        [Foldout("Outline", true)]
+        [SerializeField] public bool DrawOutlines;
+        [ConditionalField(nameof(DrawOutlines)), Range(0.0f, 1f), SerializeField] public float OutlineSize;
+        [ConditionalField(nameof(DrawOutlines)), SerializeField] protected Gradient OutlineColor;
+        [ConditionalField(nameof(DrawOutlines)), SerializeField] protected bool UseOutlineColorPulse;
+        [ConditionalField(nameof(DrawOutlines)), SerializeField] protected float OutlinePulseSpeed;
+        [ConditionalField(nameof(DrawOutlines)), SerializeField] protected bool UseOutlineStaticPulse;
+
+        [Foldout("Modifiers", true)]
         [SerializeField] protected Vector2 Gravity = Vector2.zero;
         [Range(0.0f, 1f), SerializeField] protected float BounceAbsorbtionY;
         [Range(0.0f, 1f), SerializeField] protected float BounceAbsorbtionX;                  
@@ -46,7 +60,7 @@ namespace BulletHell
         
         // Current active projectiles from this emitter
         public int ActiveProjectileCount { get; private set; }
-        public int ActiveBorderCount { get; private set; }
+        public int ActiveOutlineCount { get; private set; }
 
         // Collision layer
         private int LayerMask = 1;
@@ -67,16 +81,16 @@ namespace BulletHell
             Interval = INTERVAL;
 
             // If projectile type is not set, use default
-            if (ProjectileType == null)
-                ProjectileType = ProjectileManager.Instance.GetProjectileType(0);
+            if (ProjectilePrefab == null)
+                ProjectilePrefab = ProjectileManager.Instance.GetProjectilePrefab(0);
         }
 
         public void Initialize(int size)
         {
             Projectiles = new Pool<ProjectileData>(size);
-            if (ProjectileType.Border != null)
+            if (ProjectilePrefab.Outline != null)
             {
-                ProjectileBorders = new Pool<ProjectileData>(size);
+                ProjectileOutlines = new Pool<ProjectileData>(size);
             }
         }
 
@@ -123,7 +137,7 @@ namespace BulletHell
         private void UpdateProjectiles(float tick)
         {
             ActiveProjectileCount = 0;
-            ActiveBorderCount = 0;
+            ActiveOutlineCount = 0;
 
             ContactFilter2D contactFilter = new ContactFilter2D
             {
@@ -139,6 +153,8 @@ namespace BulletHell
                 GeometryUtility.CalculateFrustumPlanes(Camera, Planes);
             }
 
+            UpdateStaticPulses(tick);
+
             // loop through all active projectile data
             for (int i = 0; i < Projectiles.Nodes.Length; i++)
             {
@@ -149,6 +165,8 @@ namespace BulletHell
                     // Projectile is active
                     if (Projectiles.Nodes[i].Item.TimeToLive > 0)
                     {
+                        UpdateProjectileNodePulse(tick, ref Projectiles.Nodes[i].Item);                       
+
                         // apply acceleration
                         Projectiles.Nodes[i].Item.Velocity *= (1 + Projectiles.Nodes[i].Item.Acceleration * tick);
 
@@ -170,9 +188,9 @@ namespace BulletHell
                         }
 
                         float radius = 0;
-                        if (Projectiles.Nodes[i].Item.Border.Item != null)
+                        if (Projectiles.Nodes[i].Item.Outline.Item != null)
                         {
-                            radius = Projectiles.Nodes[i].Item.Border.Item.Scale / 2f;
+                            radius = Projectiles.Nodes[i].Item.Outline.Item.Scale / 2f;
                         }
                         else
                         {
@@ -213,21 +231,35 @@ namespace BulletHell
                                 deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick * (1 - RaycastHitBuffer[0].fraction);
 
                                 Projectiles.Nodes[i].Item.Position += deltaPosition;
-                                Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
+
+                                if (UseColorPulse)
+                                {
+                                    if (UseStaticPulse) {
+                                        Projectiles.Nodes[i].Item.Color = Color.Evaluate(StaticPulseTime / PULSE_TIME);
+                                    }
+                                    else {
+                                        Projectiles.Nodes[i].Item.Color = Color.Evaluate(Projectiles.Nodes[i].Item.PulseTime / PULSE_TIME);
+                                    }                                    
+                                }
+                                else
+                                {
+                                    Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
+                                }
+                                
 
                                 // Absorbs energy from bounce
                                 Projectiles.Nodes[i].Item.Velocity = new Vector2(Projectiles.Nodes[i].Item.Velocity.x * (1 - BounceAbsorbtionX), Projectiles.Nodes[i].Item.Velocity.y * (1 - BounceAbsorbtionY));
 
                                 //handle shadow
-                                if (Projectiles.Nodes[i].Item.Border.Item != null)
+                                if (Projectiles.Nodes[i].Item.Outline.Item != null)
                                 {
-                                    Projectiles.Nodes[i].Item.Border.Item.Color = BorderColor.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
-                                    Projectiles.Nodes[i].Item.Border.Item.Position = Projectiles.Nodes[i].Item.Position;
-                                    projectileManager.UpdateBufferData(ProjectileType.Border, Projectiles.Nodes[i].Item.Border.Item);
-                                    ActiveBorderCount++;
+                                    Projectiles.Nodes[i].Item.Outline.Item.Color = OutlineColor.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
+                                    Projectiles.Nodes[i].Item.Outline.Item.Position = Projectiles.Nodes[i].Item.Position;
+                                    projectileManager.UpdateBufferData(ProjectilePrefab.Outline, Projectiles.Nodes[i].Item.Outline.Item);
+                                    ActiveOutlineCount++;
                                 }
 
-                                projectileManager.UpdateBufferData(ProjectileType, Projectiles.Nodes[i].Item);
+                                projectileManager.UpdateBufferData(ProjectilePrefab, Projectiles.Nodes[i].Item);
                                 ActiveProjectileCount++;
                             }
                             else
@@ -239,18 +271,31 @@ namespace BulletHell
                         {
                             //No collision -move projectile
                             Projectiles.Nodes[i].Item.Position += deltaPosition;
-                            Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
 
-                            //handle shadow
-                            if (Projectiles.Nodes[i].Item.Border.Item != null)
+                            if (UseColorPulse)
                             {
-                                Projectiles.Nodes[i].Item.Border.Item.Color = BorderColor.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
-                                Projectiles.Nodes[i].Item.Border.Item.Position = Projectiles.Nodes[i].Item.Position;
-                                projectileManager.UpdateBufferData(ProjectileType.Border, Projectiles.Nodes[i].Item.Border.Item);
-                                ActiveBorderCount++;
+                                if (UseStaticPulse) {
+                                    Projectiles.Nodes[i].Item.Color = Color.Evaluate(StaticPulseTime / PULSE_TIME);
+                                }
+                                else {
+                                    Projectiles.Nodes[i].Item.Color = Color.Evaluate(Projectiles.Nodes[i].Item.PulseTime / PULSE_TIME);
+                                }
+                            }
+                            else
+                            {
+                                Projectiles.Nodes[i].Item.Color = Color.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
+                            }
+                            
+                            //handle shadow
+                            if (Projectiles.Nodes[i].Item.Outline.Item != null)
+                            {
+                                Projectiles.Nodes[i].Item.Outline.Item.Color = OutlineColor.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
+                                Projectiles.Nodes[i].Item.Outline.Item.Position = Projectiles.Nodes[i].Item.Position;
+                                projectileManager.UpdateBufferData(ProjectilePrefab.Outline, Projectiles.Nodes[i].Item.Outline.Item);
+                                ActiveOutlineCount++;
                             }
 
-                            projectileManager.UpdateBufferData(ProjectileType, Projectiles.Nodes[i].Item);
+                            projectileManager.UpdateBufferData(ProjectilePrefab, Projectiles.Nodes[i].Item);
                             ActiveProjectileCount++;
                         }
                     }
@@ -263,15 +308,89 @@ namespace BulletHell
             }
         }
 
+        private void UpdateProjectileNodePulse(float tick, ref ProjectileData data)
+        {
+            if (UseColorPulse && !UseStaticPulse)
+            {
+                if (data.PulseDown)
+                {
+                    data.PulseTime -= PulseSpeed * tick;
+                    if (data.PulseTime <= 0)
+                    {
+                        data.PulseTime = 0;
+                        data.PulseDown = false;
+                    }
+                }
+                else
+                {
+                    data.PulseTime += PulseSpeed * tick;
+                    if (data.PulseTime >= PULSE_TIME)
+                    {
+                        data.PulseTime = PULSE_TIME;
+                        data.PulseDown = true;
+                    }
+                }
+            }
+        }
+
+        private void UpdateStaticPulses(float tick)
+        {
+            //projectile pulse
+            if (UseColorPulse && UseStaticPulse)
+            {
+                if (StaticPulseDown)
+                {
+                    StaticPulseTime -= PulseSpeed * tick;
+                    if (StaticPulseTime <= 0)
+                    {
+                        StaticPulseTime = 0;
+                        StaticPulseDown = false;
+                    }
+                }
+                else
+                {
+                    StaticPulseTime += PulseSpeed * tick;
+                    if (StaticPulseTime >= PULSE_TIME)
+                    {
+                        StaticPulseTime = PULSE_TIME;
+                        StaticPulseDown = true;
+                    }
+                }
+            }
+
+            //outline pulse
+            if (UseOutlineColorPulse && UseOutlineStaticPulse)
+            {
+                if (OutlineStaticPulseDown)
+                {
+                    OutlineStaticPulseTime -= OutlinePulseSpeed * tick;
+                    if (OutlineStaticPulseTime <= 0)
+                    {
+                        OutlineStaticPulseTime = 0;
+                        OutlineStaticPulseDown = false;
+                    }
+                }
+                else
+                {
+                    OutlineStaticPulseTime += OutlinePulseSpeed * tick;
+                    if (OutlineStaticPulseTime >= PULSE_TIME)
+                    {
+                        OutlineStaticPulseTime = PULSE_TIME;
+                        OutlineStaticPulseDown = true;
+                    }
+                }
+            }
+        }
+
         private void ReturnNode(Pool<ProjectileData>.Node node)
         {
             if (node.Active)
             {
                 node.Item.TimeToLive = -1;
-                if (node.Item.Border.Item != null)
+                if (node.Item.Outline.Item != null)
                 {
-                    ProjectileBorders.Return(node.Item.Border.NodeIndex);
-                    node.Item.Border.Item = null;
+                    ProjectileOutlines.Return(node.Item.Outline.NodeIndex);
+                    node.Item.Outline.Item = null;
                 }
 
                 Projectiles.Return(node.NodeIndex);
@@ -285,10 +404,10 @@ namespace BulletHell
                 if (Projectiles.Nodes[i].Active)
                 {
                     Projectiles.Nodes[i].Item.TimeToLive = -1;
-                    if (Projectiles.Nodes[i].Item.Border.Item != null)
+                    if (Projectiles.Nodes[i].Item.Outline.Item != null)
                     {
-                        ProjectileBorders.Return(Projectiles.Nodes[i].Item.Border.NodeIndex);
-                        Projectiles.Nodes[i].Item.Border.Item = null;
+                        ProjectileOutlines.Return(Projectiles.Nodes[i].Item.Outline.NodeIndex);
+                        Projectiles.Nodes[i].Item.Outline.Item = null;
                     }
                     
                     Projectiles.Return(Projectiles.Nodes[i].NodeIndex);

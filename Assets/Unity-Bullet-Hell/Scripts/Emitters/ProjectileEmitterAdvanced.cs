@@ -4,7 +4,7 @@ namespace BulletHell
 {
     public class ProjectileEmitterAdvanced : ProjectileEmitterBase
     {
-        [Header("Spokes")]
+        [Foldout("Spokes", true)]
         [Range(1, 10), SerializeField] protected int GroupCount = 1;        
         [Range(1, 10), SerializeField] protected int SpokeCount = 3;
         [Range(1, 100), SerializeField] protected float SpokeSpacing = 40;
@@ -112,21 +112,21 @@ namespace BulletHell
                             node.Item.Acceleration = Acceleration;
                         }
 
-                        if (ProjectileType.Border != null && DrawBorders)
+                        if (ProjectilePrefab.Outline != null && DrawOutlines)
                         {
-                            Pool<ProjectileData>.Node borderNode = ProjectileBorders.Get();
+                            Pool<ProjectileData>.Node outlineNode = ProjectileOutlines.Get();
 
-                            borderNode.Item.Position = node.Item.Position;
-                            borderNode.Item.Scale = node.Item.Scale + BorderSize;
-                            borderNode.Item.TimeToLive = node.Item.TimeToLive;
-                            borderNode.Item.Direction = node.Item.Direction;
-                            borderNode.Item.Gravity = node.Item.Gravity;
-                            borderNode.Item.Velocity = node.Item.Velocity;
-                            borderNode.Item.Position = node.Item.Position;
-                            borderNode.Item.Color = BorderColor.Evaluate(0);
-                            borderNode.Item.Acceleration = node.Item.Acceleration;
+                            outlineNode.Item.Position = node.Item.Position;
+                            outlineNode.Item.Scale = node.Item.Scale + OutlineSize;
+                            outlineNode.Item.TimeToLive = node.Item.TimeToLive;
+                            outlineNode.Item.Direction = node.Item.Direction;
+                            outlineNode.Item.Gravity = node.Item.Gravity;
+                            outlineNode.Item.Velocity = node.Item.Velocity;
+                            outlineNode.Item.Position = node.Item.Position;
+                            outlineNode.Item.Color = OutlineColor.Evaluate(0);
+                            outlineNode.Item.Acceleration = node.Item.Acceleration;
 
-                            node.Item.Border = borderNode;
+                            node.Item.Outline = outlineNode;
                         }
 
                         left = !left;

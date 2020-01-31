@@ -351,6 +351,37 @@ PrefabInstance:
       propertyPath: BorderSize
       value: 0.05
       objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: ProjectilePrefab
+      value: 
+      objectReference: {fileID: 8841699598713729355, guid: 4fedefd988960d247aaa18371098f2c1,
+        type: 3}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: DrawOutlines
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: OutlineSize
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: OutlineColor.key0.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: OutlineColor.key0.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: OutlineColor.key0.b
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d3901bae36dc6884da48a493d489cb35, type: 3}
 --- !u!1 &519420028
@@ -511,7 +542,7 @@ PrefabInstance:
     - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
         type: 3}
       propertyPath: Speed
-      value: 0.58
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
         type: 3}
@@ -531,7 +562,7 @@ PrefabInstance:
     - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
         type: 3}
       propertyPath: RotationSpeed
-      value: 0
+      value: 7.35
       objectReference: {fileID: 0}
     - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
         type: 3}
@@ -562,6 +593,102 @@ PrefabInstance:
         type: 3}
       propertyPath: ProjectilePoolSize
       value: 5000
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: ProjectilePrefab
+      value: 
+      objectReference: {fileID: 6229722539795054817, guid: 70930bc239ea32b44a88214c58f621a1,
+        type: 3}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: DrawOutlines
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: OutlineSize
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: UseColorPulse
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: PulseSpeed
+      value: 6.71
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: INTERVAL
+      value: 0.81
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.key0.r
+      value: 0.7169812
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.key0.g
+      value: 0.7169812
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.key0.b
+      value: 0.7169812
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.key1.r
+      value: 0.8396226
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.key1.g
+      value: 0.50016683
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.key1.b
+      value: 0.14653791
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.key2.r
+      value: 0.91039276
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.key2.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.ctime1
+      value: 30647
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.ctime2
+      value: 65535
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: Color.m_NumColorKeys
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: UseOutlineColorPulse
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5656796718786279384, guid: f5de2ec52633851489395577541c20f5,
+        type: 3}
+      propertyPath: TimeToLive
+      value: 30
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f5de2ec52633851489395577541c20f5, type: 3}

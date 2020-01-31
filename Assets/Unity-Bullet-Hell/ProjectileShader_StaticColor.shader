@@ -1,4 +1,4 @@
-﻿Shader "ProjectileShader" {
+﻿Shader "ProjectileShader_StaticColor" {
   Properties {
     _MainTex ("Sprite Texture", 2D) = "white" {}
     _Color ("Tint", Color) = (1,1,1,1)
@@ -37,10 +37,6 @@
         CBUFFER_START(UnityPerDrawSprite)
             float _EnableExternalAlpha;
         CBUFFER_END
-
-		#if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)
-			StructuredBuffer<float4> colorBuffer;
-		#endif
 
         #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
           StructuredBuffer<float4> positionBuffer;          
@@ -98,12 +94,8 @@
             OUT.vertex = UnityObjectToClipPos(IN.vertex);
             OUT.texcoord = IN.texcoord;
 
-		#if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)
-			OUT.color = IN.color * colorBuffer[unity_InstanceID];
-		#else 
 			OUT.color = IN.color * _Color;
-		#endif
-
+					   
             #ifdef PIXELSNAP_ON
             OUT.vertex = UnityPixelSnap (OUT.vertex);
             #endif

@@ -9,7 +9,7 @@ namespace BulletHell
 
         // Lists out all the projectile types found in Assets
         [SerializeField]
-        private List<ProjectileType> ProjectileTypes;
+        private List<ProjectilePrefab> ProjectilePrefabs;
 
         // Each projectile type has its own material, therefore, own IndirectRenderer
         private Dictionary<int, IndirectRenderer> IndirectRenderers;
@@ -62,9 +62,9 @@ namespace BulletHell
         {
             if (!Initialized)
             {
-                // Grab a list of Projectile Types founds in assets folder "ProjectileTypes"
-                GameObject[] projectileTypes = Resources.LoadAll<GameObject>("ProjectileTypes");
-                ProjectileTypes = new List<ProjectileType>();
+                // Grab a list of Projectile Types founds in assets folder "ProjectilePrefabs"
+                GameObject[] projectileTypes = Resources.LoadAll<GameObject>("ProjectilePrefabs");
+                ProjectilePrefabs = new List<ProjectilePrefab>();
                 IndirectRenderers = new Dictionary<int, IndirectRenderer>();
                 ProjectileTypeCounters = new Dictionary<int, ProjectileTypeCounters>();
                                              
@@ -72,34 +72,29 @@ namespace BulletHell
                 int currentIndex = 0;
                 for (int n = 0; n < projectileTypes.Length; n++)
                 {
-                    ProjectileType type = projectileTypes[n].GetComponent<ProjectileType>();
+                    ProjectilePrefab type = projectileTypes[n].GetComponent<ProjectilePrefab>();
+
+                    // if script is not attached, then we skip as it is invalid.
+                    if (type == null)
+                        continue;
+
                     type.Initialize(currentIndex);
-                    ProjectileTypes.Add(type);
+                    ProjectilePrefabs.Add(type);
 
                     // If material is set to be a static color ensure we do not send color data to shader
-                    float isStaticFloat = type.Material.GetFloat("_StaticColor");
-                    bool isStatic = false;
-                    if (isStaticFloat == 1)
-                        isStatic = true;
-
-                    IndirectRenderers.Add(currentIndex, new IndirectRenderer(type.MaxProjectileCount, type.Material, type.Mesh, isStatic));
+                    IndirectRenderers.Add(currentIndex, new IndirectRenderer(type.GetMaxProjectileCount(), type.Material, type.Mesh, type.IsStaticColor));
                     ProjectileTypeCounters.Add(currentIndex, new ProjectileTypeCounters());
 
                     currentIndex++;
                     
-                    //if type has a shadow add another renderer for it
-                    if (type.Border != null)
+                    //if type has a outline, add another renderer for it
+                    if (type.Outline != null)
                     {
-                        type.Border.Initialize(currentIndex);
-                        ProjectileTypes.Add(type.Border);
+                        type.Outline.Initialize(currentIndex);
+                        ProjectilePrefabs.Add(type.Outline);
 
                         // If material is set to be a static color ensure we do not send color data to shader
-                        isStaticFloat = type.Border.Material.GetFloat("_StaticColor");
-                        isStatic = false;
-                        if (isStaticFloat == 1)
-                            isStatic = true;
-
-                        IndirectRenderers.Add(currentIndex, new IndirectRenderer(type.MaxProjectileCount, type.Border.Material, type.Border.Mesh, isStatic));
+                        IndirectRenderers.Add(currentIndex, new IndirectRenderer(type.GetMaxProjectileCount(), type.Outline.Material, type.Outline.Mesh, type.IsStaticColor));
                         ProjectileTypeCounters.Add(currentIndex, new ProjectileTypeCounters());
 
                         currentIndex++;
@@ -119,11 +114,11 @@ namespace BulletHell
         public void AddEmitter(ProjectileEmitterBase emitter, int allocation)
         {
             // Default projectile if no projectile type set
-            if (emitter.ProjectileType == null)
-                emitter.ProjectileType = GetProjectileType(0);
+            if (emitter.ProjectilePrefab == null)
+                emitter.ProjectilePrefab = GetProjectilePrefab(0);
 
             // Increment group counter
-            ProjectileTypeCounters[emitter.ProjectileType.Index].TotalGroups++;
+            ProjectileTypeCounters[emitter.ProjectilePrefab.Index].TotalGroups++;
 
             // Should be a way to not allocate more than projectile type will allow - across all emitters
             emitter.Initialize(allocation);
@@ -142,10 +137,10 @@ namespace BulletHell
                 EmitterCount = 0;
 
                 // reset group counter
-                for (int n = 0; n < ProjectileTypes.Count; n++)
+                for (int n = 0; n < ProjectilePrefabs.Count; n++)
                 {
-                    ProjectileTypeCounters[ProjectileTypes[n].Index].TotalGroups = 0;
-                    ProjectileTypeCounters[ProjectileTypes[n].Index].TotalProjectilesAssigned = 0;
+                    ProjectileTypeCounters[ProjectilePrefabs[n].Index].TotalGroups = 0;
+                    ProjectileTypeCounters[ProjectilePrefabs[n].Index].TotalProjectilesAssigned = 0;
                 }
 
                 for (int n = 0; n < EmittersArray.Length; n++)
@@ -170,11 +165,11 @@ namespace BulletHell
             {
                 EmittersArray[n] = emittersTemp[n];
                 // Default projectile if no projectile type set
-                if (EmittersArray[n].ProjectileType == null)
-                    EmittersArray[n].ProjectileType = GetProjectileType(0);
+                if (EmittersArray[n].ProjectilePrefab == null)
+                    EmittersArray[n].ProjectilePrefab = GetProjectilePrefab(0);
 
                 // Increment group counter
-                ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalGroups++;
+                ProjectileTypeCounters[EmittersArray[n].ProjectilePrefab.Index].TotalGroups++;
             }
 
             // Initialize the emitters -- if value is set fo projectilePoolSize -- system will use it
@@ -202,18 +197,18 @@ namespace BulletHell
                     //}
                     // Initialize Emitter pool size
                     EmittersArray[n].Initialize(projectilesToAssign);
-                    ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalProjectilesAssigned += projectilesToAssign;
+                    ProjectileTypeCounters[EmittersArray[n].ProjectilePrefab.Index].TotalProjectilesAssigned += projectilesToAssign;
 
                     EmitterCount++;
                 }
             }
 
             // Check assignments - output error if too many assigned
-            for (int n = 0; n < ProjectileTypes.Count; n++)
+            for (int n = 0; n < ProjectilePrefabs.Count; n++)
             {
-                if (ProjectileTypeCounters[ProjectileTypes[n].Index].TotalProjectilesAssigned > ProjectileTypes[n].MaxProjectileCount)
+                if (ProjectileTypeCounters[ProjectilePrefabs[n].Index].TotalProjectilesAssigned > ProjectilePrefabs[n].GetMaxProjectileCount())
                 {
-                    Debug.Log("Projectile Type '" + ProjectileTypes[n].name + "' emitters assigned too many projectiles:  " + ProjectileTypeCounters[ProjectileTypes[n].Index].TotalProjectilesAssigned + " assigned with max of " + ProjectileTypes[n].MaxProjectileCount + ".  Reduce Max Projectiles on Emitters that use this projectile type.");
+                    Debug.Log("Projectile Type '" + ProjectilePrefabs[n].name + "' emitters assigned too many projectiles:  " + ProjectileTypeCounters[ProjectilePrefabs[n].Index].TotalProjectilesAssigned + " assigned with max of " + ProjectilePrefabs[n].GetMaxProjectileCount() + ".  Reduce Max Projectiles on Emitters that use this projectile type.");
                 }
             }
 
@@ -237,7 +232,7 @@ namespace BulletHell
             else
             {
                 EmittersArray[nextEmpty] = emitter;
-                ProjectileTypeCounters[emitter.ProjectileType.Index].TotalGroups++;
+                ProjectileTypeCounters[emitter.ProjectilePrefab.Index].TotalGroups++;
 
                 int projectilesToAssign = emitter.ProjectilePoolSize;
 
@@ -258,19 +253,19 @@ namespace BulletHell
                 //}
                 // Initialize Emitter pool size
                 emitter.Initialize(projectilesToAssign);
-                ProjectileTypeCounters[emitter.ProjectileType.Index].TotalProjectilesAssigned += projectilesToAssign;
+                ProjectileTypeCounters[emitter.ProjectilePrefab.Index].TotalProjectilesAssigned += projectilesToAssign;
 
                 EmitterCount++;
             }
 
         }
 
-        public ProjectileType GetProjectileType(int index)
+        public ProjectilePrefab GetProjectilePrefab(int index)
         {
-            return ProjectileTypes[index];
+            return ProjectilePrefabs[index];
         }
 
-        public void UpdateBufferData(ProjectileType projectileType, ProjectileData data)
+        public void UpdateBufferData(ProjectilePrefab projectileType, ProjectileData data)
         {
             if (projectileType.Index != LastAccessedProjectileTypeIndex)
             {
@@ -279,7 +274,7 @@ namespace BulletHell
             }
 
             LastAccessedRenderer.UpdateBufferData(projectileType.BufferIndex, data);
-            projectileType.BufferIndex++;
+            projectileType.IncrementBufferIndex();
         }
 
         public void Update()
@@ -307,10 +302,10 @@ namespace BulletHell
         public void UpdateEmitters()
         {
             //reset
-            for (int n = 0; n < ProjectileTypes.Count; n++)
+            for (int n = 0; n < ProjectilePrefabs.Count; n++)
             {
                 ProjectileTypeCounters[n].ActiveProjectiles = 0;
-                ProjectileTypes[n].BufferIndex = 0;
+                ProjectilePrefabs[n].ResetBufferIndex();
             }
 
             for (int n = 0; n < EmittersArray.Length; n++)
@@ -322,11 +317,11 @@ namespace BulletHell
                         EmittersArray[n].UpdateEmitter();
 
                         // Update projectile counters
-                        ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].ActiveProjectiles += EmittersArray[n].ActiveProjectileCount;
+                        ProjectileTypeCounters[EmittersArray[n].ProjectilePrefab.Index].ActiveProjectiles += EmittersArray[n].ActiveProjectileCount;
 
-                        // Border set? Update it too.
-                        if (EmittersArray[n].ProjectileType.Border != null)
-                            ProjectileTypeCounters[EmittersArray[n].ProjectileType.Border.Index].ActiveProjectiles += EmittersArray[n].ActiveBorderCount;
+                        // update outlines
+                        if (EmittersArray[n].ProjectilePrefab.Outline != null)
+                            ProjectileTypeCounters[EmittersArray[n].ProjectilePrefab.Outline.Index].ActiveProjectiles += EmittersArray[n].ActiveOutlineCount;
                     }
                     else
                     {
@@ -340,15 +335,15 @@ namespace BulletHell
         public void DrawEmitters()
         {
             // We draw all emitters at the same time based on their Projectile Type.  1 draw call per projectile type.
-            for (int n = 0; n < ProjectileTypes.Count; n++)
+            for (int n = 0; n < ProjectilePrefabs.Count; n++)
             {
-                if (ProjectileTypeCounters[ProjectileTypes[n].Index].ActiveProjectiles > 0)
+                if (ProjectileTypeCounters[ProjectilePrefabs[n].Index].ActiveProjectiles > 0)
                 {
-                    if (ProjectileTypes[n].Border != null)
+                    if (ProjectilePrefabs[n].Outline != null)
                     {
-                        IndirectRenderers[ProjectileTypes[n].Border.Index].Draw(ProjectileTypeCounters[ProjectileTypes[n].Border.Index].ActiveProjectiles);
+                        IndirectRenderers[ProjectilePrefabs[n].Outline.Index].Draw(ProjectileTypeCounters[ProjectilePrefabs[n].Outline.Index].ActiveProjectiles);
                     }
-                    IndirectRenderers[ProjectileTypes[n].Index].Draw(ProjectileTypeCounters[ProjectileTypes[n].Index].ActiveProjectiles);
+                    IndirectRenderers[ProjectilePrefabs[n].Index].Draw(ProjectileTypeCounters[ProjectilePrefabs[n].Index].ActiveProjectiles);
                 }
             }
         }
