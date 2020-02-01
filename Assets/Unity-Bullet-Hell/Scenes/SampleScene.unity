@@ -926,3 +926,169 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!1001 &2130540203
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 5637193097534451155, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_Name
+      value: Spread (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451155, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1.416
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.628
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.9884469
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: ProjectilePoolSize
+      value: 5000
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: CullProjectilesOutsideCameraBounds
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: ProjectileType
+      value: 
+      objectReference: {fileID: 1392230877552907709, guid: 4fedefd988960d247aaa18371098f2c1,
+        type: 3}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: DrawShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: BorderColor.key0.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: BorderColor.key0.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: BorderColor.key0.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: BorderColor.key1.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: BorderColor.key1.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: BorderColor.key1.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: DrawBorders
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: BorderSize
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: ProjectilePrefab
+      value: 
+      objectReference: {fileID: 8841699598713729355, guid: 4fedefd988960d247aaa18371098f2c1,
+        type: 3}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: DrawOutlines
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: OutlineSize
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: OutlineColor.key0.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: OutlineColor.key0.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: OutlineColor.key0.b
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: d3901bae36dc6884da48a493d489cb35, type: 3}

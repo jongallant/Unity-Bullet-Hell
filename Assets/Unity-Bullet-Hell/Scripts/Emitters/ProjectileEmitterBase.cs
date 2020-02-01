@@ -253,7 +253,22 @@ namespace BulletHell
                                 //handle shadow
                                 if (Projectiles.Nodes[i].Item.Outline.Item != null)
                                 {
-                                    Projectiles.Nodes[i].Item.Outline.Item.Color = OutlineColor.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
+                                    // Update color
+                                    if (UseOutlineColorPulse)
+                                    {
+                                        if (UseOutlineStaticPulse)
+                                        {
+                                            Projectiles.Nodes[i].Item.Outline.Item.Color = OutlineColor.Evaluate(OutlineStaticPulseTime / PULSE_TIME);
+                                        }
+                                        else
+                                        {
+                                            Projectiles.Nodes[i].Item.Outline.Item.Color = OutlineColor.Evaluate(Projectiles.Nodes[i].Item.OutlinePulseTime / PULSE_TIME);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Projectiles.Nodes[i].Item.Outline.Item.Color = OutlineColor.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
+                                    }
                                     Projectiles.Nodes[i].Item.Outline.Item.Position = Projectiles.Nodes[i].Item.Position;
                                     projectileManager.UpdateBufferData(ProjectilePrefab.Outline, Projectiles.Nodes[i].Item.Outline.Item);
                                     ActiveOutlineCount++;
@@ -289,7 +304,23 @@ namespace BulletHell
                             //handle shadow
                             if (Projectiles.Nodes[i].Item.Outline.Item != null)
                             {
-                                Projectiles.Nodes[i].Item.Outline.Item.Color = OutlineColor.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
+                                // Update Color
+                                if (UseOutlineColorPulse)
+                                {
+                                    if (UseOutlineStaticPulse)
+                                    {
+                                        Projectiles.Nodes[i].Item.Outline.Item.Color = OutlineColor.Evaluate(OutlineStaticPulseTime / PULSE_TIME);
+                                    }
+                                    else
+                                    {
+                                        Projectiles.Nodes[i].Item.Outline.Item.Color = OutlineColor.Evaluate(Projectiles.Nodes[i].Item.OutlinePulseTime / PULSE_TIME);
+                                    }
+                                }
+                                else
+                                {
+                                    Projectiles.Nodes[i].Item.Outline.Item.Color = OutlineColor.Evaluate(1 - Projectiles.Nodes[i].Item.TimeToLive / TimeToLive);
+                                }
+                                
                                 Projectiles.Nodes[i].Item.Outline.Item.Position = Projectiles.Nodes[i].Item.Position;
                                 projectileManager.UpdateBufferData(ProjectilePrefab.Outline, Projectiles.Nodes[i].Item.Outline.Item);
                                 ActiveOutlineCount++;
@@ -328,6 +359,28 @@ namespace BulletHell
                     {
                         data.PulseTime = PULSE_TIME;
                         data.PulseDown = true;
+                    }
+                }
+            }
+
+            if (UseOutlineColorPulse && !UseOutlineStaticPulse)
+            {
+                if (data.OutlinePulseDown)
+                {
+                    data.OutlinePulseTime -= OutlinePulseSpeed * tick;
+                    if (data.OutlinePulseTime <= 0)
+                    {
+                        data.OutlinePulseTime = 0;
+                        data.OutlinePulseDown = false;
+                    }
+                }
+                else
+                {
+                    data.OutlinePulseTime += OutlinePulseSpeed * tick;
+                    if (data.OutlinePulseTime >= PULSE_TIME)
+                    {
+                        data.OutlinePulseTime = PULSE_TIME;
+                        data.OutlinePulseDown = true;
                     }
                 }
             }
