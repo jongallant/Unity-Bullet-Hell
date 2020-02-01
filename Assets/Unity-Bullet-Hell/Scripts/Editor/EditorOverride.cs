@@ -22,7 +22,7 @@ namespace BulletHell
 		private Colors colors;
 		private FoldoutAttribute prevFold;
 		private GUIStyle style;
-       
+
         private void Awake()
         {
             var uiTex_in = Resources.Load<Texture2D>("IN foldout focus-6510");
@@ -78,7 +78,7 @@ namespace BulletHell
         {
             foreach (var cach in cache)
             {
-                FoldManager.SetFold(cach.Value.atr.Name, cach.Value.expanded);
+                FoldManager.SetFold(cach.Value.atr.Id, cach.Value.expanded);
                 cach.Value.Dispose();
             }
         }
@@ -92,15 +92,15 @@ namespace BulletHell
 				for (var i = 0; i < length; i++)
 				{
 					var fold = Attribute.GetCustomAttribute(objectFields[i], typeof(FoldoutAttribute)) as FoldoutAttribute;
-
+                    
 					Cache c;
 					if (fold == null)
 					{
 						if (prevFold != null && prevFold.FoldEverything)
 						{                            
 							if (!cache.TryGetValue(prevFold.Name, out c)) {                               
-                                cache.Add(prevFold.Name, new Cache {atr = prevFold, types = new HashSet<string> {objectFields[i].Name}});                                
-                                cache[prevFold.Name].expanded = FoldManager.GetFold(prevFold.Name);
+                                cache.Add(prevFold.Name, new Cache {atr = prevFold, types = new HashSet<string> {objectFields[i].Name}});
+                                cache[prevFold.Name].expanded = FoldManager.GetFold(prevFold.Id);
                             }
 							else
 							{
@@ -111,10 +111,12 @@ namespace BulletHell
 					}
 
 					prevFold = fold;
-					if (!cache.TryGetValue(fold.Name, out c))
+                    fold.Id = fold.Name + target.GetHashCode().ToString();
+
+                    if (!cache.TryGetValue(fold.Name, out c))
 					{
                         cache.Add(fold.Name, new Cache {atr = fold, types = new HashSet<string> {objectFields[i].Name}});
-                        cache[prevFold.Name].expanded = FoldManager.GetFold(fold.Name);
+                        cache[prevFold.Name].expanded = FoldManager.GetFold(fold.Id);
                     }
 					else
 					{

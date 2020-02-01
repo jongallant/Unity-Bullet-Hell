@@ -4,6 +4,7 @@ namespace BulletHell
 {
 	public class FoldoutAttribute : PropertyAttribute
 	{
+        public string Id;
 		public string Name;
 		public bool FoldEverything;
         

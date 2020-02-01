@@ -1,7 +1,5 @@
 ﻿using UnityEditor;
-using UnityEngine;
 
-[ExecuteInEditMode]
 public static class FoldManager
 {
     public static bool GetFold(string name)
