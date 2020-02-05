@@ -283,27 +283,30 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
+  UseColorPulse: 0
+  PulseSpeed: 0
+  UseStaticPulse: 0
   RotationSpeed: 0
   AutoFire: 1
   BounceOffSurfaces: 1
   CullProjectilesOutsideCameraBounds: 0
   CollisionDetection: 1
-  ProjectilePoolSize: 5000
-  DrawOutlines: 1
-  OutlineSize: 0.016
+  ProjectilePoolSize: 50000
+  DrawOutlines: 0
+  OutlineSize: 0.04
   OutlineColor:
     serializedVersion: 2
-    key0: {r: 1, g: 1, b: 1, a: 1}
-    key1: {r: 1, g: 1, b: 1, a: 1}
-    key2: {r: 0, g: 0, b: 0, a: 0}
+    key0: {r: 0.7169812, g: 0.7169812, b: 0.7169812, a: 1}
+    key1: {r: 0.8396226, g: 0.50016683, b: 0.14653791, a: 1}
+    key2: {r: 0.91039276, g: 1, b: 0, a: 0}
     key3: {r: 0, g: 0, b: 0, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
     key5: {r: 0, g: 0, b: 0, a: 0}
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
-    ctime1: 65535
-    ctime2: 0
+    ctime1: 30647
+    ctime2: 65535
     ctime3: 0
     ctime4: 0
     ctime5: 0
@@ -318,15 +321,18 @@ MonoBehaviour:
     atime6: 0
     atime7: 0
     m_Mode: 0
-    m_NumColorKeys: 2
+    m_NumColorKeys: 3
     m_NumAlphaKeys: 2
+  UseOutlineColorPulse: 1
+  OutlinePulseSpeed: 0.9
+  UseOutlineStaticPulse: 0
   Gravity: {x: 0, y: -5.94}
   BounceAbsorbtionY: 0.48
   BounceAbsorbtionX: 0
   Acceleration: 0
   GroupCount: 1
-  SpokeCount: 7
-  SpokeSpacing: 25
+  SpokeCount: 1
+  SpokeSpacing: 1
 --- !u!4 &86362418
 Transform:
   m_ObjectHideFlags: 0
