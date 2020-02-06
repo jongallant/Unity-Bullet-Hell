@@ -16,6 +16,7 @@ namespace BulletHell
         [Range(1, 10), SerializeField] protected int GroupCount = 1;
         [Range(1, 10), SerializeField] protected int SpokeCount = 3;
         [Range(1, 100), SerializeField] protected float SpokeSpacing = 40;
+        [SerializeField] protected bool MirrorRotation;
 
         [Foldout("Modifiers", true)]
         [SerializeField] public bool UseFollowTarget;
@@ -29,6 +30,7 @@ namespace BulletHell
 
         private EmitterGroup[] Groups;
         private int LastGroupCountPoll = -1;
+        private bool PreviousMirrorRotation = false;
 
         public new void Awake()
         {
@@ -50,29 +52,37 @@ namespace BulletHell
                 return;
             }
 
-            if (Groups == null || LastGroupCountPoll != GroupCount)
-            {
+            bool mirror = false;
+            if (Groups == null || LastGroupCountPoll != GroupCount || PreviousMirrorRotation != MirrorRotation)
+            {               
+                // Refresh the groups, they were changed
                 float rotation = 0;
                 for (int n = 0; n < Groups.Length; n++)
                 {
                     if (n < GroupCount && Groups[n] == null)
                     {
-                        Groups[n] = new EmitterGroup(Rotate(Direction, rotation).normalized, SpokeCount, SpokeSpacing);
+                        Groups[n] = new EmitterGroup(Rotate(Direction, rotation).normalized, SpokeCount, SpokeSpacing, mirror);
                     }
                     else if (n < GroupCount)
                     {
-                        Groups[n].Direction = Rotate(Direction, rotation).normalized;
-                        Groups[n].SpokeCount = SpokeCount;
-                        Groups[n].SpokeSpacing = SpokeSpacing;
+                        Groups[n].Set(Rotate(Direction, rotation).normalized, SpokeCount, SpokeSpacing, mirror);
                     }
                     else
                     {
                         //n is greater than GroupCount -- ensure we clear the rest of the buffer
                         Groups[n] = null;
                     }
+
+                    // invert the mirror flag if needed
+                    if (MirrorRotation)
+                        mirror = !mirror;
+
+                    // sets the starting direction of all the groups so we divide by 360 to evenly distribute their direction
+                    // Could reduce the scope of the directions here
                     rotation += 360 / GroupCount;
                 }
                 LastGroupCountPoll = GroupCount;
+                PreviousMirrorRotation = MirrorRotation;
             }
             else if (RotationSpeed == 0)
             {
@@ -155,7 +165,11 @@ namespace BulletHell
                         left = !left;
                     }
 
-                    Groups[g].Direction = Rotate(Groups[g].Direction, RotationSpeed);
+
+                    if (Groups[g].InvertRotation)
+                        Groups[g].Direction = Rotate(Groups[g].Direction,-RotationSpeed);
+                    else
+                        Groups[g].Direction = Rotate(Groups[g].Direction, RotationSpeed);
                 }
             }
         }
