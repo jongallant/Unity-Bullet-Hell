@@ -2,6 +2,12 @@
 
 namespace BulletHell
 {
+    public enum FollowTargetType
+    {
+        Homing,
+        LockOnShot
+    };
+
     public class ProjectileEmitterAdvanced : ProjectileEmitterBase
     {
         ColorPulse StaticOutlinePulse;
@@ -15,12 +21,13 @@ namespace BulletHell
         [Foldout("Spokes", true)]
         [Range(1, 10), SerializeField] protected int GroupCount = 1;
         [Range(1, 10), SerializeField] protected int SpokeCount = 3;
-        [Range(1, 100), SerializeField] protected float SpokeSpacing = 40;
+        [Range(0, 100), SerializeField] protected float SpokeSpacing = 40;
         [SerializeField] protected bool MirrorRotation;
 
         [Foldout("Modifiers", true)]
-        [SerializeField] public bool UseFollowTarget;
+        [SerializeField] public bool UseFollowTarget;       
         [ConditionalField(nameof(UseFollowTarget)), SerializeField] protected Transform Target;
+        [ConditionalField(nameof(UseFollowTarget)), SerializeField] protected FollowTargetType FollowTargetType = FollowTargetType.Homing;
         [ConditionalField(nameof(UseFollowTarget)), Range(0, 5), SerializeField] protected float FollowIntensity;
 
         [Foldout("Outline", true)]
@@ -121,6 +128,10 @@ namespace BulletHell
                             node.Item.Scale = Scale;
                             node.Item.TimeToLive = TimeToLive - leakedTime;
                             node.Item.Gravity = Gravity;
+                            if (UseFollowTarget && FollowTargetType == FollowTargetType.LockOnShot && Target != null)
+                            {
+                                Groups[g].Direction = (Target.transform.position - transform.position).normalized;
+                            }
                             node.Item.Velocity = Speed * Rotate(Groups[g].Direction, rotation).normalized;
                             node.Item.Position += node.Item.Velocity * leakedTime;
                             node.Item.Color = Color.Evaluate(0);
@@ -137,6 +148,10 @@ namespace BulletHell
                             node.Item.Speed = Speed;
                             node.Item.TimeToLive = TimeToLive - leakedTime;
                             node.Item.Gravity = Gravity;
+                            if (UseFollowTarget && FollowTargetType == FollowTargetType.LockOnShot && Target != null)
+                            {
+                                Groups[g].Direction = (Target.transform.position - transform.position).normalized;
+                            }
                             node.Item.Velocity = Speed * Rotate(Groups[g].Direction, -rotation).normalized;
                             node.Item.Position += node.Item.Velocity * leakedTime;
                             node.Item.Color = Color.Evaluate(0);
@@ -212,8 +227,8 @@ namespace BulletHell
                         Projectiles.Nodes[i].Item.Velocity *= (1 + Projectiles.Nodes[i].Item.Acceleration * tick);
 
                         // follow target
-                        if (Projectiles.Nodes[i].Item.FollowTarget && Projectiles.Nodes[i].Item.Target != null)
-                        {
+                        if (FollowTargetType == FollowTargetType.Homing && Projectiles.Nodes[i].Item.FollowTarget && Projectiles.Nodes[i].Item.Target != null)
+                        {                         
                             Projectiles.Nodes[i].Item.Speed += Acceleration * tick;
                             Projectiles.Nodes[i].Item.Speed = Mathf.Clamp(Projectiles.Nodes[i].Item.Speed, -MaxSpeed, MaxSpeed);
 
