@@ -8,19 +8,11 @@ This system makes use of Unity's Graphics.DrawMeshInstancedIndirect functionalit
 
 ## How do I use this?
 This system is composed of a couple of parts.  
-#### Projectile Material
-![Material Example](http://www.jgallant.com/images/unitybullethell/mats.png)
 
-Two sample Materials are provided, but you can easily create your own to use.  The material you create must use the "ProjectileShader", in order for this system to work.  You must also make sure to select "Enable GPU Instancing", otherwise the GPU instancing will not work.  
+#### Projectile Prefabs
+![Projectile Example](http://www.jgallant.com/images/unitybullethell/prefab.png)
 
-If you are not planning on changing the color of each instance of your projectiles, make sure to select "Static Color".  This will stop sending the Color data to the GPU, and increase performance.  If you want to be able to control the color of each individual instance, leave "Static Color" unchecked.
-
-#### Projectile Type
-![Projectile Example](http://www.jgallant.com/images/unitybullethell/projectile.png)
-
-Projectile Types are prefabs with an attached "ProjectileType" Monobehaviour derived script.  They are stored in the "/Resources/ProjectileTypes" folder.  These define the Mesh, Material, and MaxCount of the projectile in question.  
-
-When creating new Projectile Types, make sure to use the correct Projectile Material.  You can use any Mesh you want.
+Projectile Prefabs are prefabs with an attached "ProjectilePrefab.cs" Monobehaviour derived script.  They are stored in the "/Resources/ProjectilePrefabs" folder.  These define the Mesh, Texture, Z-Index and other properties related to the Projectile Shader.  It defines the appearance of the projectile, as well as the material that will be used with it.  
 
 You will also want to tweak the "Max Projectile Count" value to be as low as possible for your application, in order to maximize efficiency.  This caps the size of the buffers and data pools.  If it is set too low, you will run out of projectiles to fire.  If set too high, you will have reserved too much memory for your application.
 
