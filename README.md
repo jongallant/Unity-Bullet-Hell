@@ -25,7 +25,7 @@ When creating new Projectile Types, make sure to use the correct Projectile Mate
 You will also want to tweak the "Max Projectile Count" value to be as low as possible for your application, in order to maximize efficiency.  This caps the size of the buffers and data pools.  If it is set too low, you will run out of projectiles to fire.  If set too high, you will have reserved too much memory for your application.
 
 #### Emitters
-![Emitter Example](http://www.jgallant.com/images/expanded.png)
+![Emitter Example](http://www.jgallant.com/images/unitybullethell/expanded.png)
 
 Emitters spawn projectiles into the world, and determine their appearance and how they behave.
 
