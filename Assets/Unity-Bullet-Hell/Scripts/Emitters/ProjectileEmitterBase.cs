@@ -155,8 +155,8 @@ namespace BulletHell
                         // apply acceleration
                         Projectiles.Nodes[i].Item.Velocity *= (1 + Projectiles.Nodes[i].Item.Acceleration * tick);
 
-                        // apply gravity
-                        Projectiles.Nodes[i].Item.Velocity += Projectiles.Nodes[i].Item.Gravity * tick;
+                        // apply half gravity before -- and other half after the position update to attempt to smooth out the interpolation
+                        Projectiles.Nodes[i].Item.Velocity += Projectiles.Nodes[i].Item.Gravity * tick;                       
 
                         // calculate where projectile will be at the end of this frame
                         Vector2 deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick;

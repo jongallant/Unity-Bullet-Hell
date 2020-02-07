@@ -20,9 +20,11 @@ namespace BulletHell
 
         [Foldout("Spokes", true)]
         [Range(1, 10), SerializeField] protected int GroupCount = 1;
+        [Range(0, 1), SerializeField] protected float GroupSpacing = 40;
         [Range(1, 10), SerializeField] protected int SpokeCount = 3;
         [Range(0, 100), SerializeField] protected float SpokeSpacing = 40;
-        [SerializeField] protected bool MirrorRotation;
+        [SerializeField] protected bool MirrorPairRotation;                                                     
+        [ConditionalField(nameof(MirrorPairRotation)), SerializeField] protected bool PairGroupDirection;       
 
         [Foldout("Modifiers", true)]
         [SerializeField] public bool UseFollowTarget;       
@@ -37,7 +39,8 @@ namespace BulletHell
 
         private EmitterGroup[] Groups;
         private int LastGroupCountPoll = -1;
-        private bool PreviousMirrorRotation = false;
+        private bool PreviousMirrorPairRotation = false;
+        private bool PreviousPairGroupDirection = false;
 
         public new void Awake()
         {
@@ -60,7 +63,7 @@ namespace BulletHell
             }
 
             bool mirror = false;
-            if (Groups == null || LastGroupCountPoll != GroupCount || PreviousMirrorRotation != MirrorRotation)
+            if (Groups == null || LastGroupCountPoll != GroupCount || PreviousMirrorPairRotation != MirrorPairRotation || PreviousPairGroupDirection != PairGroupDirection)
             {               
                 // Refresh the groups, they were changed
                 float rotation = 0;
@@ -81,15 +84,16 @@ namespace BulletHell
                     }
 
                     // invert the mirror flag if needed
-                    if (MirrorRotation)
+                    if (MirrorPairRotation)
                         mirror = !mirror;
 
                     // sets the starting direction of all the groups so we divide by 360 to evenly distribute their direction
                     // Could reduce the scope of the directions here
-                    rotation += 360 / GroupCount;
+                    rotation = CalculateGroupRotation(n, rotation);
                 }
                 LastGroupCountPoll = GroupCount;
-                PreviousMirrorRotation = MirrorRotation;
+                PreviousMirrorPairRotation = MirrorPairRotation;
+                PreviousPairGroupDirection = PairGroupDirection;
             }
             else if (RotationSpeed == 0)
             {
@@ -101,7 +105,8 @@ namespace BulletHell
                     {
                         Groups[n].Direction = Rotate(Direction, rotation).normalized;
                     }
-                    rotation += 360 / GroupCount;
+
+                    rotation = CalculateGroupRotation(n, rotation);
                 }
             }
         }
@@ -182,11 +187,72 @@ namespace BulletHell
 
 
                     if (Groups[g].InvertRotation)
-                        Groups[g].Direction = Rotate(Groups[g].Direction,-RotationSpeed);
+                        Groups[g].Direction = Rotate(Groups[g].Direction, -RotationSpeed);
                     else
                         Groups[g].Direction = Rotate(Groups[g].Direction, RotationSpeed);
                 }
             }
+        }
+
+        public void OnDrawGizmos()
+        {
+            Gizmos.DrawWireSphere(transform.position, Scale);
+
+            Gizmos.color = UnityEngine.Color.yellow;
+
+            float rotation = 0;
+
+            for (int n = 0; n < GroupCount; n++)
+            {
+                Vector2 direction = Rotate(Direction, rotation).normalized * (Scale + 0.2f);
+                Gizmos.DrawLine(transform.position, new Vector2(transform.position.x, transform.position.y) + direction);
+
+                rotation = CalculateGroupRotation(n, rotation);
+            }
+
+            Gizmos.color = UnityEngine.Color.red;
+            rotation = 0;
+            float spokeRotation = 0;
+            bool left = true;
+            for (int n = 0; n < GroupCount; n++)
+            {
+                Vector2 groupDirection = Rotate(Direction, rotation).normalized;
+                spokeRotation = 0;
+                left = true;
+
+                for (int m = 0; m < SpokeCount; m++)
+                {
+                    Vector2 direction = Vector2.zero;
+                    if (left)
+                    {
+                        direction = Rotate(groupDirection, spokeRotation).normalized * (Scale + 0.15f);
+                        spokeRotation += SpokeSpacing;
+                    }
+                    else
+                    {
+                        direction = Rotate(groupDirection, -spokeRotation).normalized * (Scale + 0.15f);
+                    }
+                    Gizmos.DrawLine(transform.position, new Vector2(transform.position.x, transform.position.y) + direction);
+
+                    left = !left;
+                }
+
+                rotation = CalculateGroupRotation(n, rotation);
+            }
+        }
+
+        private float CalculateGroupRotation(int index, float currentRotation)
+        {
+            if (PairGroupDirection)
+            {
+                if (index % 2 == 1)
+                    currentRotation += 360 * GroupSpacing * 2f / GroupCount;
+            }
+            else
+            {
+                currentRotation += 360 * GroupSpacing / GroupCount;
+            }
+            return currentRotation;
         }
 
         // There is code duplication here, instead of calling base update.  this prevents from having to loop the projectiles twice.
