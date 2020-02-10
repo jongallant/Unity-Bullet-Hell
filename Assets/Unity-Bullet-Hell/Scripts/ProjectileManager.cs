@@ -275,9 +275,9 @@ namespace BulletHell
             //    RegisterEmitter(go.GetComponent<ProjectileEmitterAdvanced>());
             //}
 
-            // Provides a simple way to update active Emitters if removing/adding them at runtime for debugging purposes
-            // You should be using AddEmitter() if you want to add Emitters at runtime
 
+            // Provides a simple way to update active Emitters if removing/adding them at runtime for debugging purposes
+            // You should be using AddEmitter() if you want to add Emitters at runtime (See above comment).
 #if UNITY_EDITOR
             RefreshEmitters();
 #endif

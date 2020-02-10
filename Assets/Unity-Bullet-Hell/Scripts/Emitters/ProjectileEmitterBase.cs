@@ -24,7 +24,7 @@ namespace BulletHell
         [Foldout("General", true)]
         [Range(0.01f, 5f), SerializeField] protected float INTERVAL = 0.1f;
         [SerializeField] protected Vector2 Direction = Vector2.up;
-        [SerializeField] protected float TimeToLive = 5;        
+        [SerializeField] protected float TimeToLive = 5;
         [Range(0.001f, 10f), SerializeField] protected float Speed = 1;
         [Range(1f, 1000f), SerializeField] protected float MaxSpeed = 100;
         [Range(0.01f, 2f), SerializeField] protected float Scale = 0.05f;
@@ -140,11 +140,7 @@ namespace BulletHell
 
                     Timer -= FIXED_TIMESTEP_RATE;
 
-                    if (Timer > FIXED_TIMESTEP_RATE)  
-                        UpdateProjectiles(FIXED_TIMESTEP_RATE, false);
-                    else
-                        UpdateProjectiles(FIXED_TIMESTEP_RATE, true);
-
+                    UpdateProjectiles(FIXED_TIMESTEP_RATE);
                     updateExecuted = true;
                 }                      
                 if (!updateExecuted)
@@ -177,9 +173,9 @@ namespace BulletHell
 
         public abstract Pool<ProjectileData>.Node FireProjectile(Vector2 direction, float leakedTime);
 
-        protected abstract void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick, bool updateBuffers = true);
+        protected abstract void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick);
 
-        protected abstract void UpdateProjectiles(float tick, bool updateBuffers = true);
+        protected abstract void UpdateProjectiles(float tick);
 
         protected void UpdateBuffers(float tick)
         {

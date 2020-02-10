@@ -758,7 +758,7 @@ PrefabInstance:
     - target: {fileID: 3453500415576585399, guid: 8ffa35d3cefc3894c8637e5fe90f0cc1,
         type: 3}
       propertyPath: INTERVAL
-      value: 0.1
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 3453500415576585399, guid: 8ffa35d3cefc3894c8637e5fe90f0cc1,
         type: 3}
@@ -778,7 +778,7 @@ PrefabInstance:
     - target: {fileID: 3453500415576585399, guid: 8ffa35d3cefc3894c8637e5fe90f0cc1,
         type: 3}
       propertyPath: Speed
-      value: 0.15
+      value: 0.4
       objectReference: {fileID: 0}
     - target: {fileID: 3453500415576585399, guid: 8ffa35d3cefc3894c8637e5fe90f0cc1,
         type: 3}
@@ -793,7 +793,7 @@ PrefabInstance:
     - target: {fileID: 3453500415576585399, guid: 8ffa35d3cefc3894c8637e5fe90f0cc1,
         type: 3}
       propertyPath: Scale
-      value: 0.04
+      value: 0.08
       objectReference: {fileID: 0}
     - target: {fileID: 3453500415576585399, guid: 8ffa35d3cefc3894c8637e5fe90f0cc1,
         type: 3}

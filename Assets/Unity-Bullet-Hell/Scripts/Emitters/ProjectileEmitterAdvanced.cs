@@ -178,8 +178,6 @@ namespace BulletHell
                             node.Item.Outline = outlineNode;
                         }
 
-                        UpdateProjectile(ref node, leakedTime, false);
-
                         left = !left;
                     }
 
@@ -255,7 +253,7 @@ namespace BulletHell
         }
 
         // There is code duplication here, instead of calling base update.  this prevents from having to loop the projectiles twice.
-        protected override void UpdateProjectiles(float tick, bool updateBuffers = true)
+        protected override void UpdateProjectiles(float tick)
         {
             ActiveProjectileCount = 0;
             ActiveOutlineCount = 0;
@@ -272,7 +270,7 @@ namespace BulletHell
             // loop through all active projectile data
             for (int i = 0; i < Projectiles.Nodes.Length; i++)
             {
-                UpdateProjectile(ref Projectiles.Nodes[i], tick, updateBuffers);
+                UpdateProjectile(ref Projectiles.Nodes[i], tick);
 
                 if (Projectiles.Nodes[i].Active)
                 {
@@ -288,7 +286,7 @@ namespace BulletHell
             }
         }
 
-        protected override void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick, bool updateBuffers = true)
+        protected override void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick)
         {          
             if (node.Active)
             {

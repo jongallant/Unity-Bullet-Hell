@@ -56,12 +56,12 @@ namespace BulletHell
             base.UpdateEmitter(tick);
         }
 
-        protected override void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick, bool updateBuffers = true)
+        protected override void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick)
         {
             throw new System.NotImplementedException();
         }
 
-        protected override void UpdateProjectiles(float tick, bool updateBuffers = true)
+        protected override void UpdateProjectiles(float tick)
         {
             throw new System.NotImplementedException();
         }

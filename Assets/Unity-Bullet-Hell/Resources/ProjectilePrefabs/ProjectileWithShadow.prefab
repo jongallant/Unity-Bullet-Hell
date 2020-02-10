@@ -45,7 +45,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Texture: {fileID: 0}
   Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  ZIndez: 0.1
+  ZIndez: 0.03
   PixelSnap: 1
   StaticColor: 0
   Color: {r: 0, g: 0, b: 0, a: 0}
