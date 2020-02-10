@@ -22,7 +22,7 @@ namespace BulletHell
         [SerializeField] public ProjectilePrefab ProjectilePrefab;
 
         [Foldout("General", true)]
-        [Range(0.001f, 5f), SerializeField] protected float INTERVAL = 0.1f;
+        [Range(0.01f, 5f), SerializeField] protected float INTERVAL = 0.1f;
         [SerializeField] protected Vector2 Direction = Vector2.up;
         [SerializeField] protected float TimeToLive = 5;        
         [Range(0.001f, 10f), SerializeField] protected float Speed = 1;
@@ -33,7 +33,9 @@ namespace BulletHell
         [SerializeField] protected bool AutoFire = true;
         [SerializeField] protected bool BounceOffSurfaces = true;        
         [SerializeField] protected bool CullProjectilesOutsideCameraBounds = true;
-        [SerializeField] protected CollisionDetectionType CollisionDetection = CollisionDetectionType.CircleCast;        
+        [SerializeField] protected CollisionDetectionType CollisionDetection = CollisionDetectionType.CircleCast;
+        [SerializeField] protected bool IsVariableTimeStep = false;
+        [ConditionalField(nameof(IsVariableTimeStep), true), Range(0.01f, 0.02f), SerializeField] protected float FIXED_TIMESTEP_RATE = 0.01f;
         [Range(1, 1000000), SerializeField] public int ProjectilePoolSize = 1000;
 
         [Foldout("Outline", true)]
@@ -59,15 +61,26 @@ namespace BulletHell
         protected Plane[] Planes = new Plane[6];
 
         protected Camera Camera;
-        
+        protected ContactFilter2D ContactFilter;
+        protected ProjectileManager ProjectileManager;
+
+        float Timer = 0;        
+        int ProjectilesWaiting;
+        protected int[] ActiveProjectileIndexes;
+        protected int ActiveProjectileIndexesPosition;
+
         public void Awake()
         {
-            Camera = Camera.main;            
-        }
-
-        public void Start()
-        {
             Interval = INTERVAL;
+            Camera = Camera.main;
+            
+            ContactFilter = new ContactFilter2D
+            {
+                layerMask = LayerMask,
+                useTriggers = false,
+            };
+
+            ProjectileManager = ProjectileManager.Instance;
 
             // If projectile type is not set, use default
             if (ProjectilePrefab == null)
@@ -81,29 +94,70 @@ namespace BulletHell
             {
                 ProjectileOutlines = new Pool<ProjectileData>(size);
             }
+
+            ActiveProjectileIndexes = new int[size];
         }
 
-        public void UpdateEmitter()
+        public void UpdateEmitter(float tick)
         {
             if (AutoFire)
             {
-                Interval -= Time.deltaTime;
+                Interval -= tick;
             }
-            UpdateProjectiles(Time.deltaTime);
-        }
 
-        public void ResolveLeakedTime()
-        {
-            if (AutoFire)
+            // Interval has expired
+            while (Interval <= 0)
             {
-                // Spawn in new projectiles for next frame
-                while (Interval <= 0)
+                Interval += INTERVAL;
+
+                if (IsVariableTimeStep)
                 {
+                    // Variable time step, we fire projectile immediately
                     float leakedTime = Mathf.Abs(Interval);
-                    Interval += INTERVAL;
                     FireProjectile(Direction, leakedTime);
                 }
+                else
+                {                    
+                    // Fixed timestep, we must wait until next fixed frame to fire projectile
+                    ProjectilesWaiting++;
+                }
             }
+
+           
+            if (!IsVariableTimeStep)
+            {
+                bool updateExecuted = false;
+                Timer += tick;
+
+                // fixed timestep timer internal loop
+                while (Timer > FIXED_TIMESTEP_RATE)
+                {
+                    while (ProjectilesWaiting > 0)
+                    {
+                        ProjectilesWaiting--;
+                        FireProjectile(Direction, ProjectilesWaiting * FIXED_TIMESTEP_RATE);
+                    }
+
+                    Timer -= FIXED_TIMESTEP_RATE;
+
+                    if (Timer > FIXED_TIMESTEP_RATE)  
+                        UpdateProjectiles(FIXED_TIMESTEP_RATE, false);
+                    else
+                        UpdateProjectiles(FIXED_TIMESTEP_RATE, true);
+
+                    updateExecuted = true;
+                }                      
+                if (!updateExecuted)
+                    UpdateBuffers(tick);    // update was not executed so re-use buffers but still remove tick from TTL
+                else
+                    UpdateBuffers(0);       // already removed tick from TTL - don't do it again
+            }
+            else
+            {
+                // Variable time step -- just update the projectiles with deltatime
+                UpdateProjectiles(tick);
+                UpdateBuffers(0);
+            }            
         }
 
         // Function to rotate a vector by x degrees
@@ -121,142 +175,45 @@ namespace BulletHell
             return v;
         }
 
-        public abstract void FireProjectile(Vector2 direction, float leakedTime);
+        public abstract Pool<ProjectileData>.Node FireProjectile(Vector2 direction, float leakedTime);
 
-        protected virtual void UpdateProjectiles(float tick)
+        protected abstract void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick, bool updateBuffers = true);
+
+        protected abstract void UpdateProjectiles(float tick, bool updateBuffers = true);
+
+        protected void UpdateBuffers(float tick)
         {
             ActiveProjectileCount = 0;
             ActiveOutlineCount = 0;
 
-            ContactFilter2D contactFilter = new ContactFilter2D
+            for (int i = 0; i < ActiveProjectileIndexes.Length; i++)
             {
-                layerMask = LayerMask,
-                useTriggers = false,
-            };
+                // End of array is set to -1
+                if (ActiveProjectileIndexes[i] == -1)
+                    break;
 
-            ProjectileManager projectileManager = ProjectileManager.Instance;
+                Pool<ProjectileData>.Node node = Projectiles.GetActive(ActiveProjectileIndexes[i]);
+               
+                node.Item.TimeToLive -= tick;
 
-            //Update camera planes if needed
-            if (CullProjectilesOutsideCameraBounds)
-            {
-                GeometryUtility.CalculateFrustumPlanes(Camera, Planes);
+                ProjectileManager.UpdateBufferData(ProjectilePrefab, node.Item);
+                ActiveProjectileCount++;
             }
 
-            // loop through all active projectile data
-            for (int i = 0; i < Projectiles.Nodes.Length; i++)
+            // faster to do two loops than to update the outlines at the same time due to the renderer swapping
+            for (int i = 0; i < ActiveProjectileIndexes.Length; i++)
             {
-                if (Projectiles.Nodes[i].Active)
+                // End of array is set to -1
+                if (ActiveProjectileIndexes[i] == -1)
+                    break;
+
+                Pool<ProjectileData>.Node node = Projectiles.GetActive(ActiveProjectileIndexes[i]);
+
+                    //handle outline
+                if (node.Item.Outline.Item != null)
                 {
-                    Projectiles.Nodes[i].Item.TimeToLive -= tick;
-
-                    // Projectile is active
-                    if (Projectiles.Nodes[i].Item.TimeToLive > 0)
-                    {
-                        // apply acceleration
-                        Projectiles.Nodes[i].Item.Velocity *= (1 + Projectiles.Nodes[i].Item.Acceleration * tick);
-
-                        // apply half gravity before -- and other half after the position update to attempt to smooth out the interpolation
-                        Projectiles.Nodes[i].Item.Velocity += Projectiles.Nodes[i].Item.Gravity * tick;                       
-
-                        // calculate where projectile will be at the end of this frame
-                        Vector2 deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick;
-                        float distance = deltaPosition.magnitude;
-
-                        // If flag set - return projectiles that are no longer in view 
-                        if (CullProjectilesOutsideCameraBounds)
-                        {
-                            Bounds bounds = new Bounds(Projectiles.Nodes[i].Item.Position, new Vector3(Projectiles.Nodes[i].Item.Scale, Projectiles.Nodes[i].Item.Scale, Projectiles.Nodes[i].Item.Scale));
-                            if (!GeometryUtility.TestPlanesAABB(Planes, bounds))
-                            {
-                                ReturnNode(Projectiles.Nodes[i]);
-                            }
-                        }
-
-                        float radius = 0;
-                        if (Projectiles.Nodes[i].Item.Outline.Item != null)
-                        {
-                            radius = Projectiles.Nodes[i].Item.Outline.Item.Scale / 2f;
-                        }
-                        else
-                        {
-                            radius = Projectiles.Nodes[i].Item.Scale / 2f;
-                        }
-
-                        int result = -1;
-                        if (CollisionDetection == CollisionDetectionType.Raycast)
-                        {
-                            result = Physics2D.Raycast(Projectiles.Nodes[i].Item.Position, deltaPosition, contactFilter, RaycastHitBuffer, distance);
-                        }
-                        else if (CollisionDetection == CollisionDetectionType.CircleCast)
-                        {
-                            result = Physics2D.CircleCast(Projectiles.Nodes[i].Item.Position, radius, deltaPosition, contactFilter, RaycastHitBuffer, distance);
-                        }
-
-                        if (result > 0)
-                        {
-                            // Put whatever hit code you want here such as damage events
-
-                            // Collision was detected, should we bounce off or destroy the projectile?
-                            if (BounceOffSurfaces)
-                            {
-                                // Calculate the position the projectile is bouncing off the wall at
-                                Vector2 projectedNewPosition = Projectiles.Nodes[i].Item.Position + (deltaPosition * RaycastHitBuffer[0].fraction);
-                                Vector2 directionOfHitFromCenter = RaycastHitBuffer[0].point - projectedNewPosition;
-                                float distanceToContact = (RaycastHitBuffer[0].point - projectedNewPosition).magnitude;
-                                float remainder = radius - distanceToContact;
-
-                                // reposition projectile to the point of impact 
-                                Projectiles.Nodes[i].Item.Position = projectedNewPosition - (directionOfHitFromCenter.normalized * remainder);
-
-                                // reflect the velocity for a bounce effect -- will work well on static surfaces
-                                Projectiles.Nodes[i].Item.Velocity = Vector2.Reflect(Projectiles.Nodes[i].Item.Velocity, RaycastHitBuffer[0].normal);
-
-                                // calculate remaining distance after bounce
-                                deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick * (1 - RaycastHitBuffer[0].fraction);
-
-                                Projectiles.Nodes[i].Item.Position += deltaPosition;
-
-                                // Absorbs energy from bounce
-                                Projectiles.Nodes[i].Item.Velocity = new Vector2(Projectiles.Nodes[i].Item.Velocity.x * (1 - BounceAbsorbtionX), Projectiles.Nodes[i].Item.Velocity.y * (1 - BounceAbsorbtionY));
-
-                                //handle outline
-                                if (Projectiles.Nodes[i].Item.Outline.Item != null)
-                                {
-                                    Projectiles.Nodes[i].Item.Outline.Item.Position = Projectiles.Nodes[i].Item.Position;
-                                    projectileManager.UpdateBufferData(ProjectilePrefab.Outline, Projectiles.Nodes[i].Item.Outline.Item);
-                                    ActiveOutlineCount++;
-                                }
-
-                                projectileManager.UpdateBufferData(ProjectilePrefab, Projectiles.Nodes[i].Item);
-                                ActiveProjectileCount++;
-                            }
-                            else
-                            {
-                                ReturnNode(Projectiles.Nodes[i]);
-                            }
-                        }
-                        else
-                        {
-                            //No collision -move projectile
-                            Projectiles.Nodes[i].Item.Position += deltaPosition;
-
-                            //handle outline
-                            if (Projectiles.Nodes[i].Item.Outline.Item != null)
-                            {
-                                Projectiles.Nodes[i].Item.Outline.Item.Position = Projectiles.Nodes[i].Item.Position;
-                                projectileManager.UpdateBufferData(ProjectilePrefab.Outline, Projectiles.Nodes[i].Item.Outline.Item);
-                                ActiveOutlineCount++;
-                            }
-
-                            projectileManager.UpdateBufferData(ProjectilePrefab, Projectiles.Nodes[i].Item);
-                            ActiveProjectileCount++;
-                        }
-                    }
-                    else
-                    {
-                        // End of life - return to pool
-                        ReturnNode(Projectiles.Nodes[i]);
-                    }
+                    ProjectileManager.UpdateBufferData(ProjectilePrefab.Outline, node.Item.Outline.Item);
+                    ActiveOutlineCount++;
                 }
             }
         }

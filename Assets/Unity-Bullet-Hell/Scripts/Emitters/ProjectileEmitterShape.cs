@@ -10,8 +10,10 @@ namespace BulletHell
         public GameObject ShapeTemplate;
         private List<Vector3> TemplatePositions;
 
-        void Awake()
+        new void Awake()
         {
+            base.Awake();
+
             if (ShapeTemplate == null)
             {
                 ShapeTemplate = Resources.Load<GameObject>(@"ShapeTemplates\CircleShape");
@@ -24,18 +26,15 @@ namespace BulletHell
             }
         }
 
-        public new void Start()
+        public override Pool<ProjectileData>.Node FireProjectile(Vector2 direction, float leakedTime)
         {
-            base.Start();
-        }
+            Pool<ProjectileData>.Node node = new Pool<ProjectileData>.Node();
 
-        public override void FireProjectile(Vector2 direction, float leakedTime)
-        {
             if (Projectiles.AvailableCount >= TemplatePositions.Count)
             {
                 for (int n = 0; n < TemplatePositions.Count; n++)
                 {
-                    Pool<ProjectileData>.Node node = Projectiles.Get();
+                    node = Projectiles.Get();
 
                     node.Item.Position = transform.position + TemplatePositions[n];
                     node.Item.Scale = Scale;
@@ -48,11 +47,23 @@ namespace BulletHell
 
                 Direction = Rotate(Direction, RotationSpeed);
             }
+
+            return node;
         }
 
-        public new void UpdateEmitter()
+        public new void UpdateEmitter(float tick)
         {
-            base.UpdateEmitter();
+            base.UpdateEmitter(tick);
+        }
+
+        protected override void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick, bool updateBuffers = true)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        protected override void UpdateProjectiles(float tick, bool updateBuffers = true)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

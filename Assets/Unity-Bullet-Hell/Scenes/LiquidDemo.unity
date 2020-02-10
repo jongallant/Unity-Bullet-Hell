@@ -249,9 +249,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ProjectilePrefab: {fileID: 8841699598713729355, guid: 4fedefd988960d247aaa18371098f2c1,
     type: 3}
-  INTERVAL: 0.03
-  Direction: {x: -1, y: -1}
-  TimeToLive: 5
+  INTERVAL: 0.1
+  Direction: {x: -1, y: 0}
+  TimeToLive: 15
   Speed: 1
   MaxSpeed: 100
   Scale: 0.15
@@ -289,7 +289,9 @@ MonoBehaviour:
   BounceOffSurfaces: 1
   CullProjectilesOutsideCameraBounds: 0
   CollisionDetection: 1
-  ProjectilePoolSize: 50000
+  IsVariableTimeStep: 0
+  FIXED_TIMESTEP_RATE: 0.02
+  ProjectilePoolSize: 20000
   DrawOutlines: 1
   OutlineSize: 0.04
   OutlineColor:
@@ -321,19 +323,19 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  Gravity: {x: 0, y: -5.94}
-  BounceAbsorbtionY: 0.41
-  BounceAbsorbtionX: 0
+  Gravity: {x: 0, y: -4}
+  BounceAbsorbtionY: 0
+  BounceAbsorbtionX: 0.201
   Acceleration: 0
   UseColorPulse: 0
   PulseSpeed: 0
   UseStaticPulse: 0
   GroupCount: 1
-  GroupSpacing: 40
-  SpokeCount: 5
-  SpokeSpacing: 9.2
-  MirrorRotation: 0
-  PairMirroredGroups: 0
+  GroupSpacing: 1
+  SpokeCount: 1
+  SpokeSpacing: 18.1
+  MirrorPairRotation: 0
+  PairGroupDirection: 0
   UseFollowTarget: 0
   Target: {fileID: 0}
   FollowTargetType: 0
@@ -656,13 +658,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1612817018}
-  m_LocalRotation: {x: 0, y: 0, z: -0.2815041, w: 0.95956004}
+  m_LocalRotation: {x: -0, y: -0, z: -0.39655864, w: 0.91800946}
   m_LocalPosition: {x: -3.186, y: 1.313, z: 3.59}
   m_LocalScale: {x: 3.17, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -32.7}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -46.726}
 --- !u!50 &1612817023
 Rigidbody2D:
   serializedVersion: 4

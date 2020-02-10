@@ -54,11 +54,15 @@ namespace BulletHell
             }
         }
 
+        public Node GetActive(int index)
+        {
+            return Nodes[index];
+        }
+
         public Node Get()
         {
             int index = Available.Dequeue();
             Nodes[index].Active = true;
-
             return Nodes[index];
         }
 

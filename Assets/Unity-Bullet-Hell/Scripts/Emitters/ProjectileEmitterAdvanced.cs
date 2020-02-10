@@ -46,11 +46,7 @@ namespace BulletHell
         {
             base.Awake();
             Groups = new EmitterGroup[10];
-        }
 
-        public new void Start()
-        {
-            base.Start();
             RefreshGroups();
         }
 
@@ -111,8 +107,10 @@ namespace BulletHell
             }
         }
 
-        public override void FireProjectile(Vector2 direction, float leakedTime)
+        public override Pool<ProjectileData>.Node FireProjectile(Vector2 direction, float leakedTime)
         {
+            Pool<ProjectileData>.Node node = new Pool<ProjectileData>.Node();
+
             RefreshGroups();
 
             for (int g = 0; g < GroupCount; g++)
@@ -124,21 +122,20 @@ namespace BulletHell
 
                     for (int n = 0; n < SpokeCount; n++)
                     {
-                        Pool<ProjectileData>.Node node = Projectiles.Get();
+                        node = Projectiles.Get();
 
                         if (left)
                         {
                             node.Item.Position = transform.position;
                             node.Item.Speed = Speed;
                             node.Item.Scale = Scale;
-                            node.Item.TimeToLive = TimeToLive - leakedTime;
+                            node.Item.TimeToLive = TimeToLive;
                             node.Item.Gravity = Gravity;
                             if (UseFollowTarget && FollowTargetType == FollowTargetType.LockOnShot && Target != null)
                             {
                                 Groups[g].Direction = (Target.transform.position - transform.position).normalized;
                             }
                             node.Item.Velocity = Speed * Rotate(Groups[g].Direction, rotation).normalized;
-                            node.Item.Position += node.Item.Velocity * leakedTime;
                             node.Item.Color = Color.Evaluate(0);
                             node.Item.Acceleration = Acceleration;
                             node.Item.FollowTarget = UseFollowTarget;
@@ -151,14 +148,13 @@ namespace BulletHell
                             node.Item.Position = transform.position;
                             node.Item.Scale = Scale;
                             node.Item.Speed = Speed;
-                            node.Item.TimeToLive = TimeToLive - leakedTime;
+                            node.Item.TimeToLive = TimeToLive;
                             node.Item.Gravity = Gravity;
                             if (UseFollowTarget && FollowTargetType == FollowTargetType.LockOnShot && Target != null)
                             {
                                 Groups[g].Direction = (Target.transform.position - transform.position).normalized;
                             }
                             node.Item.Velocity = Speed * Rotate(Groups[g].Direction, -rotation).normalized;
-                            node.Item.Position += node.Item.Velocity * leakedTime;
                             node.Item.Color = Color.Evaluate(0);
                             node.Item.Acceleration = Acceleration;
                             node.Item.FollowTarget = UseFollowTarget;
@@ -182,9 +178,10 @@ namespace BulletHell
                             node.Item.Outline = outlineNode;
                         }
 
+                        UpdateProjectile(ref node, leakedTime, false);
+
                         left = !left;
                     }
-
 
                     if (Groups[g].InvertRotation)
                         Groups[g].Direction = Rotate(Groups[g].Direction, -RotationSpeed);
@@ -192,6 +189,8 @@ namespace BulletHell
                         Groups[g].Direction = Rotate(Groups[g].Direction, RotationSpeed);
                 }
             }
+
+            return node;
         }
 
         public void OnDrawGizmos()
@@ -256,18 +255,10 @@ namespace BulletHell
         }
 
         // There is code duplication here, instead of calling base update.  this prevents from having to loop the projectiles twice.
-        protected override void UpdateProjectiles(float tick)
+        protected override void UpdateProjectiles(float tick, bool updateBuffers = true)
         {
             ActiveProjectileCount = 0;
             ActiveOutlineCount = 0;
-
-            ContactFilter2D contactFilter = new ContactFilter2D
-            {
-                layerMask = LayerMask,
-                useTriggers = false,
-            };
-
-            ProjectileManager projectileManager = ProjectileManager.Instance;
 
             //Update camera planes if needed
             if (CullProjectilesOutsideCameraBounds)
@@ -276,151 +267,160 @@ namespace BulletHell
             }
 
             UpdateStaticPulses(tick);
+            ActiveProjectileIndexesPosition = 0;
 
             // loop through all active projectile data
             for (int i = 0; i < Projectiles.Nodes.Length; i++)
             {
+                UpdateProjectile(ref Projectiles.Nodes[i], tick, updateBuffers);
+
                 if (Projectiles.Nodes[i].Active)
                 {
-                    Projectiles.Nodes[i].Item.TimeToLive -= tick;
+                    ActiveProjectileIndexes[ActiveProjectileIndexesPosition] = Projectiles.Nodes[i].NodeIndex;
+                    ActiveProjectileIndexesPosition++;
+                }
+            }
 
-                    // Projectile is active
-                    if (Projectiles.Nodes[i].Item.TimeToLive > 0)
+            // Set end point of array if not full
+            if (ActiveProjectileIndexesPosition + 1 < ActiveProjectileIndexes.Length - 1)
+            {
+                ActiveProjectileIndexes[ActiveProjectileIndexesPosition + 1] = -1;
+            }
+        }
+
+        protected override void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick, bool updateBuffers = true)
+        {          
+            if (node.Active)
+            {
+                node.Item.TimeToLive -= tick;
+                               
+                // Projectile is active
+                if (node.Item.TimeToLive > 0)
+                {
+                    UpdateProjectileNodePulse(tick, ref node.Item);
+
+                    // apply acceleration
+                    node.Item.Velocity *= (1 + node.Item.Acceleration * tick);
+
+                    // follow target
+                    if (FollowTargetType == FollowTargetType.Homing && node.Item.FollowTarget && node.Item.Target != null)
                     {
-                        UpdateProjectileNodePulse(tick, ref Projectiles.Nodes[i].Item);
+                        node.Item.Speed += Acceleration * tick;
+                        node.Item.Speed = Mathf.Clamp(node.Item.Speed, -MaxSpeed, MaxSpeed);
 
-                        // apply acceleration
-                        Projectiles.Nodes[i].Item.Velocity *= (1 + Projectiles.Nodes[i].Item.Acceleration * tick);
+                        Vector2 desiredVelocity = (new Vector2(Target.transform.position.x, Target.transform.position.y) - node.Item.Position).normalized;
+                        desiredVelocity *= node.Item.Speed;
 
-                        // follow target
-                        if (FollowTargetType == FollowTargetType.Homing && Projectiles.Nodes[i].Item.FollowTarget && Projectiles.Nodes[i].Item.Target != null)
-                        {                         
-                            Projectiles.Nodes[i].Item.Speed += Acceleration * tick;
-                            Projectiles.Nodes[i].Item.Speed = Mathf.Clamp(Projectiles.Nodes[i].Item.Speed, -MaxSpeed, MaxSpeed);
+                        Vector2 steer = desiredVelocity - node.Item.Velocity;
+                        node.Item.Velocity = Vector2.ClampMagnitude(node.Item.Velocity + steer * node.Item.FollowIntensity * tick, node.Item.Speed);
+                    }
+                    else
+                    {
+                        // apply gravity
+                        node.Item.Velocity += node.Item.Gravity * tick;
+                    }
 
-                            Vector2 desiredVelocity = (new Vector2(Target.transform.position.x, Target.transform.position.y) - Projectiles.Nodes[i].Item.Position).normalized;
-                            desiredVelocity *= Projectiles.Nodes[i].Item.Speed;
+                    // calculate where projectile will be at the end of this frame
+                    Vector2 deltaPosition = node.Item.Velocity * tick;
+                    float distance = deltaPosition.magnitude;
 
-                            Vector2 steer = desiredVelocity - Projectiles.Nodes[i].Item.Velocity;
-                            Projectiles.Nodes[i].Item.Velocity = Vector2.ClampMagnitude(Projectiles.Nodes[i].Item.Velocity + steer * Projectiles.Nodes[i].Item.FollowIntensity * tick, Projectiles.Nodes[i].Item.Speed);
-                        }
-                        else
+                    // If flag set - return projectiles that are no longer in view 
+                    if (CullProjectilesOutsideCameraBounds)
+                    {
+                        Bounds bounds = new Bounds(node.Item.Position, new Vector3(node.Item.Scale, node.Item.Scale, node.Item.Scale));
+                        if (!GeometryUtility.TestPlanesAABB(Planes, bounds))
                         {
-                            // apply gravity
-                            Projectiles.Nodes[i].Item.Velocity += Projectiles.Nodes[i].Item.Gravity * tick;
+                            ReturnNode(node);
+                            return;
                         }
+                    }
 
-                        // calculate where projectile will be at the end of this frame
-                        Vector2 deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick;
-                        float distance = deltaPosition.magnitude;
+                    float radius = 0;
+                    if (node.Item.Outline.Item != null)
+                    {
+                        radius = node.Item.Outline.Item.Scale / 2f;
+                    }
+                    else
+                    {
+                        radius = node.Item.Scale / 2f;
+                    }
 
-                        // If flag set - return projectiles that are no longer in view 
-                        if (CullProjectilesOutsideCameraBounds)
+                    // Update foreground and outline color data
+                    UpdateProjectileColor(ref node.Item);
+
+                    int result = -1;
+                    if (CollisionDetection == CollisionDetectionType.Raycast)
+                    {
+                        result = Physics2D.Raycast(node.Item.Position, deltaPosition, ContactFilter, RaycastHitBuffer, distance);
+                    }
+                    else if (CollisionDetection == CollisionDetectionType.CircleCast)
+                    {
+                        result = Physics2D.CircleCast(node.Item.Position, radius, deltaPosition, ContactFilter, RaycastHitBuffer, distance);
+                    }
+
+                    if (result > 0)
+                    {
+                        // Put whatever hit code you want here such as damage events
+
+                        // Collision was detected, should we bounce off or destroy the projectile?
+                        if (BounceOffSurfaces)
                         {
-                            Bounds bounds = new Bounds(Projectiles.Nodes[i].Item.Position, new Vector3(Projectiles.Nodes[i].Item.Scale, Projectiles.Nodes[i].Item.Scale, Projectiles.Nodes[i].Item.Scale));
-                            if (!GeometryUtility.TestPlanesAABB(Planes, bounds))
-                            {
-                                ReturnNode(Projectiles.Nodes[i]);
-                            }
-                        }
+                            // Calculate the position the projectile is bouncing off the wall at
+                            Vector2 projectedNewPosition = node.Item.Position + (deltaPosition * RaycastHitBuffer[0].fraction);
+                            Vector2 directionOfHitFromCenter = RaycastHitBuffer[0].point - projectedNewPosition;
+                            float distanceToContact = (RaycastHitBuffer[0].point - projectedNewPosition).magnitude;
+                            float remainder = radius - distanceToContact;
 
-                        float radius = 0;
-                        if (Projectiles.Nodes[i].Item.Outline.Item != null)
-                        {
-                            radius = Projectiles.Nodes[i].Item.Outline.Item.Scale / 2f;
-                        }
-                        else
-                        {
-                            radius = Projectiles.Nodes[i].Item.Scale / 2f;
-                        }
+                            // reposition projectile to the point of impact 
+                            node.Item.Position = projectedNewPosition - (directionOfHitFromCenter.normalized * remainder);
 
-                        // Update foreground and outline color data
-                        UpdateProjectileColor(ref Projectiles.Nodes[i].Item);
+                            // reflect the velocity for a bounce effect -- will work well on static surfaces
+                            node.Item.Velocity = Vector2.Reflect(node.Item.Velocity, RaycastHitBuffer[0].normal);
 
-                        int result = -1;
-                        if (CollisionDetection == CollisionDetectionType.Raycast)
-                        {
-                            result = Physics2D.Raycast(Projectiles.Nodes[i].Item.Position, deltaPosition, contactFilter, RaycastHitBuffer, distance);
-                        }
-                        else if (CollisionDetection == CollisionDetectionType.CircleCast)
-                        {
-                            result = Physics2D.CircleCast(Projectiles.Nodes[i].Item.Position, radius, deltaPosition, contactFilter, RaycastHitBuffer, distance);
-                        }
+                            // calculate remaining distance after bounce
+                            deltaPosition = node.Item.Velocity * tick * (1 - RaycastHitBuffer[0].fraction);
 
-                        if (result > 0)
-                        {
-                            // Put whatever hit code you want here such as damage events
+                            // When gravity is applied, the positional change here is actually parabolic
+                            node.Item.Position += deltaPosition;
 
-                            // Collision was detected, should we bounce off or destroy the projectile?
-                            if (BounceOffSurfaces)
-                            {
-                                // Calculate the position the projectile is bouncing off the wall at
-                                Vector2 projectedNewPosition = Projectiles.Nodes[i].Item.Position + (deltaPosition * RaycastHitBuffer[0].fraction);
-                                Vector2 directionOfHitFromCenter = RaycastHitBuffer[0].point - projectedNewPosition;
-                                float distanceToContact = (RaycastHitBuffer[0].point - projectedNewPosition).magnitude;
-                                float remainder = radius - distanceToContact;
-
-                                // reposition projectile to the point of impact 
-                                Projectiles.Nodes[i].Item.Position = projectedNewPosition - (directionOfHitFromCenter.normalized * remainder);
-
-                                // reflect the velocity for a bounce effect -- will work well on static surfaces
-                                Projectiles.Nodes[i].Item.Velocity = Vector2.Reflect(Projectiles.Nodes[i].Item.Velocity, RaycastHitBuffer[0].normal);
-
-                                // calculate remaining distance after bounce
-                                deltaPosition = Projectiles.Nodes[i].Item.Velocity * tick * (1 - RaycastHitBuffer[0].fraction);
-
-                                Projectiles.Nodes[i].Item.Position += deltaPosition;
-
-                                // Absorbs energy from bounce
-                                Projectiles.Nodes[i].Item.Velocity = new Vector2(Projectiles.Nodes[i].Item.Velocity.x * (1 - BounceAbsorbtionX), Projectiles.Nodes[i].Item.Velocity.y * (1 - BounceAbsorbtionY));
-
-                                //handle outline
-                                if (Projectiles.Nodes[i].Item.Outline.Item != null)
-                                {
-                                    Projectiles.Nodes[i].Item.Outline.Item.Position = Projectiles.Nodes[i].Item.Position;
-                                    projectileManager.UpdateBufferData(ProjectilePrefab.Outline, Projectiles.Nodes[i].Item.Outline.Item);
-                                    ActiveOutlineCount++;
-                                }
-
-                                projectileManager.UpdateBufferData(ProjectilePrefab, Projectiles.Nodes[i].Item);
-                                ActiveProjectileCount++;
-                            }
-                            else
-                            {
-                                ReturnNode(Projectiles.Nodes[i]);
-                            }
-                        }
-                        else
-                        {
-                            //No collision -move projectile
-                            Projectiles.Nodes[i].Item.Position += deltaPosition;
-
-                            UpdateProjectileColor(ref Projectiles.Nodes[i].Item);
+                            // Absorbs energy from bounce
+                            node.Item.Velocity = new Vector2(node.Item.Velocity.x * (1 - BounceAbsorbtionX), node.Item.Velocity.y * (1 - BounceAbsorbtionY));
 
                             //handle outline
-                            if (Projectiles.Nodes[i].Item.Outline.Item != null)
+                            if (node.Item.Outline.Item != null)
                             {
-                                Projectiles.Nodes[i].Item.Outline.Item.Position = Projectiles.Nodes[i].Item.Position;
-                                projectileManager.UpdateBufferData(ProjectilePrefab.Outline, Projectiles.Nodes[i].Item.Outline.Item);
-                                ActiveOutlineCount++;
-                            }
-
-                            projectileManager.UpdateBufferData(ProjectilePrefab, Projectiles.Nodes[i].Item);
-                            ActiveProjectileCount++;
+                                node.Item.Outline.Item.Position = node.Item.Position;
+                            }                      
+                        }
+                        else
+                        {
+                            ReturnNode(node);
                         }
                     }
                     else
                     {
-                        // End of life - return to pool
-                        ReturnNode(Projectiles.Nodes[i]);
+                        //No collision -move projectile
+                        node.Item.Position += deltaPosition;
+                        UpdateProjectileColor(ref node.Item);
+
+                        // Update outline position
+                        if (node.Item.Outline.Item != null)
+                        {
+                            node.Item.Outline.Item.Position = node.Item.Position;
+                        }                   
                     }
+                }
+                else
+                {
+                    // End of life - return to pool
+                    ReturnNode(node);
                 }
             }
         }
-
-        public new void UpdateEmitter()
+        
+        public new void UpdateEmitter(float tick)
         {
-            base.UpdateEmitter();
+            base.UpdateEmitter(tick);
         }
 
         private void UpdateProjectileNodePulse(float tick, ref ProjectileData data)

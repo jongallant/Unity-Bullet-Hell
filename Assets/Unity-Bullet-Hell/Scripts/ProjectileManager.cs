@@ -290,15 +290,15 @@ namespace BulletHell
 
             // Provides a simple way to update active Emitters if removing/adding them at runtime for debugging purposes
             // You should be using AddEmitter() if you want to add Emitters at runtime
+
 #if UNITY_EDITOR
             RefreshEmitters();
 #endif
 
-            UpdateEmitters();
             DrawEmitters();
-            ResolveLeakedTime();
+            UpdateEmitters();               
         }
-
+          
         public void UpdateEmitters()
         {
             //reset
@@ -314,7 +314,7 @@ namespace BulletHell
                 {
                     if (EmittersArray[n].gameObject.activeSelf && EmittersArray[n].enabled)
                     {
-                        EmittersArray[n].UpdateEmitter();
+                        EmittersArray[n].UpdateEmitter(Time.deltaTime);
 
                         // Update projectile counters
                         ProjectileTypeCounters[EmittersArray[n].ProjectilePrefab.Index].ActiveProjectiles += EmittersArray[n].ActiveProjectileCount;
@@ -344,21 +344,6 @@ namespace BulletHell
                         IndirectRenderers[ProjectilePrefabs[n].Outline.Index].Draw(ProjectileTypeCounters[ProjectilePrefabs[n].Outline.Index].ActiveProjectiles);
                     }
                     IndirectRenderers[ProjectilePrefabs[n].Index].Draw(ProjectileTypeCounters[ProjectilePrefabs[n].Index].ActiveProjectiles);
-                }
-            }
-        }
-
-        public void ResolveLeakedTime()
-        {
-            // When interval is elapsed we need to account for leaked time or our projectiles will not be synchronized properly
-            for (int n = 0; n < EmittersArray.Length; n++)
-            {
-                if (EmittersArray[n] != null)
-                {
-                    if (EmittersArray[n].gameObject.activeSelf && EmittersArray[n].enabled)
-                    {
-                        EmittersArray[n].ResolveLeakedTime();
-                    }
                 }
             }
         }
