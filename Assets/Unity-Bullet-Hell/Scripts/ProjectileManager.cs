@@ -86,19 +86,6 @@ namespace BulletHell
                     ProjectileTypeCounters.Add(currentIndex, new ProjectileTypeCounters());
 
                     currentIndex++;
-                    
-                    //if type has a outline, add another renderer for it
-                    if (type.Outline != null)
-                    {
-                        type.Outline.Initialize(currentIndex);
-                        ProjectilePrefabs.Add(type.Outline);
-
-                        // If material is set to be a static color ensure we do not send color data to shader
-                        IndirectRenderers.Add(currentIndex, new IndirectRenderer(type.GetMaxProjectileCount(), type.Outline.Material, type.Outline.Mesh, type.IsStaticColor));
-                        ProjectileTypeCounters.Add(currentIndex, new ProjectileTypeCounters());
-
-                        currentIndex++;
-                    }
                 }
 
                 EmittersArray = new ProjectileEmitterBase[MaxEmitters];
@@ -339,10 +326,6 @@ namespace BulletHell
             {
                 if (ProjectileTypeCounters[ProjectilePrefabs[n].Index].ActiveProjectiles > 0)
                 {
-                    if (ProjectilePrefabs[n].Outline != null)
-                    {
-                        IndirectRenderers[ProjectilePrefabs[n].Outline.Index].Draw(ProjectileTypeCounters[ProjectilePrefabs[n].Outline.Index].ActiveProjectiles);
-                    }
                     IndirectRenderers[ProjectilePrefabs[n].Index].Draw(ProjectileTypeCounters[ProjectilePrefabs[n].Index].ActiveProjectiles);
                 }
             }
