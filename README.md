@@ -2,7 +2,7 @@
 An extremely efficient projectile and particle generator for Unity.
 
 ## What is it?
-![Animated Gif](http://www.jgallant.com/images/unitybullethell/demo2.gif)
+![Animated Gif](http://www.jgallant.com/images/unitybullethell/flower.gif)
 
 This system makes use of Unity's Graphics.DrawMeshInstancedIndirect functionality, resulting in a single draw call per Projectile Type.  This highly efficient system is able to handle an incredibly large number of projectiles at the same time.
 
@@ -12,16 +12,14 @@ This system is composed of a couple of parts.
 #### Projectile Prefabs
 ![Projectile Example](http://www.jgallant.com/images/unitybullethell/prefab.png)
 
-Projectile Prefabs are prefabs with an attached "ProjectilePrefab.cs" Monobehaviour derived script.  They are stored in the "/Resources/ProjectilePrefabs" folder.  These define the Mesh, Texture, Z-Index and other properties related to the Projectile Shader.  It defines the appearance of the projectile, as well as the material that will be used with it.  
+Projectile Prefabs are prefabs with an attached "ProjectilePrefab.cs" Monobehaviour derived script.  They are stored in the "/Resources/ProjectilePrefabs" folder.  These define the Mesh, Texture, Z-Index and other properties related to the Projectile Shader.  It defines the appearance of the projectile, and the maximum number of projectiles per material instance.  
 
-You will also want to tweak the "Max Projectile Count" value to be as low as possible for your application, in order to maximize efficiency.  This caps the size of the buffers and data pools.  If it is set too low, you will run out of projectiles to fire.  If set too high, you will have reserved too much memory for your application.
+You will want to tweak the "Max Projectile Count" value to be as low as possible for your application, in order to maximize efficiency.  This caps the size of the buffers and data pools.  If it is set too low, you will run out of projectiles to fire.  If set too high, you will have reserved too much memory for your application.
 
 #### Emitters
-![Emitter Example](http://www.jgallant.com/images/unitybullethell/expanded.png)
+![Emitter Example](http://www.jgallant.com/images/unitybullethell/emitter3.png)
 
-Emitters spawn projectiles into the world, and determine their appearance and how they behave.
-
-There are three Emitter scripts provided:  ProjectileEmitterBasic, ProjectileEmitterAdvanced, ProjectileEmitterShape.  The properties on these scripts can be programmatically controlled, or even animated.  
+Emitters spawn projectiles into the world, based on a set of properties.  All of these properties can be programmatically controller or animated.
 
 #### Shape Emitters
 ![Shape Example](http://www.jgallant.com/images/unitybullethell/shape.png)
