@@ -147,8 +147,8 @@ namespace BulletHell
 
                 while (Interval <= 0)
                 {
-                    Interval += CoolOffTime;
                     float leakedTime = Mathf.Abs(Interval);
+                    Interval += CoolOffTime;                    
                     FireProjectile(Direction, leakedTime);
                 }
             }

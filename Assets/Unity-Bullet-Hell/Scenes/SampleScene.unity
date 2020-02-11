@@ -390,12 +390,12 @@ PrefabInstance:
     - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.81811816
+      value: 3.551
       objectReference: {fileID: 0}
     - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.8112243
+      value: 0.141
       objectReference: {fileID: 0}
     - target: {fileID: 5637193097534451153, guid: d3901bae36dc6884da48a493d489cb35,
         type: 3}
@@ -445,12 +445,12 @@ PrefabInstance:
     - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
         type: 3}
       propertyPath: SpokeCount
-      value: 1
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
         type: 3}
       propertyPath: Direction.x
-      value: -1
+      value: -1.33
       objectReference: {fileID: 0}
     - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
         type: 3}
@@ -471,6 +471,21 @@ PrefabInstance:
         type: 3}
       propertyPath: IsFixedTimestep
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: GroupSpacing
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: GroupCount
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637193097534451152, guid: d3901bae36dc6884da48a493d489cb35,
+        type: 3}
+      propertyPath: SpokeSpacing
+      value: 16.6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d3901bae36dc6884da48a493d489cb35, type: 3}

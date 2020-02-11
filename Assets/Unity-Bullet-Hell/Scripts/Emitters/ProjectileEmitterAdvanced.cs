@@ -20,9 +20,9 @@ namespace BulletHell
 
         [Foldout("Spokes", true)]
         [Range(1, 10), SerializeField] protected int GroupCount = 1;
-        [Range(0, 1), SerializeField] protected float GroupSpacing = 40;
+        [Range(0, 1), SerializeField] protected float GroupSpacing = 1;
         [Range(1, 10), SerializeField] protected int SpokeCount = 3;
-        [Range(0, 100), SerializeField] protected float SpokeSpacing = 40;
+        [Range(0, 100), SerializeField] protected float SpokeSpacing = 25;
         [SerializeField] protected bool MirrorPairRotation;                                                     
         [ConditionalField(nameof(MirrorPairRotation)), SerializeField] protected bool PairGroupDirection;       
 
@@ -129,56 +129,39 @@ namespace BulletHell
                     {
                         node = Projectiles.Get();
 
+                        node.Item.Position = transform.position;
+                        node.Item.Speed = Speed;
+                        node.Item.Scale = Scale;
+                        node.Item.TimeToLive = TimeToLive;
+                        node.Item.Gravity = Gravity;
+                        if (UseFollowTarget && FollowTargetType == FollowTargetType.LockOnShot && Target != null)
+                        {
+                            Groups[g].Direction = (Target.transform.position - transform.position).normalized;
+                        }
+                        node.Item.Color = Color.Evaluate(0);
+                        node.Item.Acceleration = Acceleration;
+                        node.Item.FollowTarget = UseFollowTarget;
+                        node.Item.FollowIntensity = FollowIntensity;
+                        node.Item.Target = Target;
+
                         if (left)
                         {
-                            node.Item.Position = transform.position;
-                            node.Item.Speed = Speed;
-                            node.Item.Scale = Scale;
-                            node.Item.TimeToLive = TimeToLive;
-                            node.Item.Gravity = Gravity;
-                            if (UseFollowTarget && FollowTargetType == FollowTargetType.LockOnShot && Target != null)
-                            {
-                                Groups[g].Direction = (Target.transform.position - transform.position).normalized;
-                            }
                             node.Item.Velocity = Speed * Rotate(Groups[g].Direction, rotation).normalized;
-                            node.Item.Color = Color.Evaluate(0);
-                            node.Item.Acceleration = Acceleration;
-                            node.Item.FollowTarget = UseFollowTarget;
-                            node.Item.FollowIntensity = FollowIntensity;
-                            node.Item.Target = Target;
                             rotation += SpokeSpacing;
                         }
                         else
                         {
-                            node.Item.Position = transform.position;
-                            node.Item.Scale = Scale;
-                            node.Item.Speed = Speed;
-                            node.Item.TimeToLive = TimeToLive;
-                            node.Item.Gravity = Gravity;
-                            if (UseFollowTarget && FollowTargetType == FollowTargetType.LockOnShot && Target != null)
-                            {
-                                Groups[g].Direction = (Target.transform.position - transform.position).normalized;
-                            }
                             node.Item.Velocity = Speed * Rotate(Groups[g].Direction, -rotation).normalized;
-                            node.Item.Color = Color.Evaluate(0);
-                            node.Item.Acceleration = Acceleration;
-                            node.Item.FollowTarget = UseFollowTarget;
-                            node.Item.FollowIntensity = FollowIntensity;
-                            node.Item.Target = Target;
                         }
 
+                        // Setup outline if we have one
                         if (ProjectilePrefab.Outline != null && DrawOutlines)
                         {
                             Pool<ProjectileData>.Node outlineNode = ProjectileOutlines.Get();
 
                             outlineNode.Item.Position = node.Item.Position;
                             outlineNode.Item.Scale = node.Item.Scale + OutlineSize;
-                            outlineNode.Item.TimeToLive = node.Item.TimeToLive;
-                            outlineNode.Item.Gravity = node.Item.Gravity;
-                            outlineNode.Item.Velocity = node.Item.Velocity;
-                            outlineNode.Item.Position = node.Item.Position;
                             outlineNode.Item.Color = OutlineColor.Evaluate(0);
-                            outlineNode.Item.Acceleration = node.Item.Acceleration;
                             
                             node.Item.Outline = outlineNode;
                         }
@@ -194,6 +177,8 @@ namespace BulletHell
                         {
                             Debug.Log("Error: Projectile was fired before list of active projectiles was refreshed.");
                         }
+
+                        UpdateProjectile(ref node, leakedTime);
 
                         left = !left;
                     }
