@@ -6,6 +6,8 @@ An extremely efficient projectile and particle generator for Unity.
 
 This system makes use of Unity's Graphics.DrawMeshInstancedIndirect functionality, resulting in a single draw call per Projectile Type.  This highly efficient system is able to handle an incredibly large number of projectiles at the same time.
 
+This projectile system is tuned for 2D usage, and provides a multitude of options and configurations.
+
 ## How do I use this?
 This system is composed of a couple of parts.  
 
