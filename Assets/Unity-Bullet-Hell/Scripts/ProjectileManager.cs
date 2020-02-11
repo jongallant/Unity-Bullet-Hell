@@ -148,6 +148,7 @@ namespace BulletHell
             // Register Emitters that are currently in the scene
             ProjectileEmitterBase[] emittersTemp = GameObject.FindObjectsOfType<ProjectileEmitterBase>();
 
+
             for (int n = 0; n < emittersTemp.Length; n++)
             {
                 EmittersArray[n] = emittersTemp[n];
@@ -165,24 +166,14 @@ namespace BulletHell
             {
                 if (EmittersArray[n] != null)
                 {
-                    int projectilesToAssign = EmittersArray[n].ProjectilePoolSize;
+                    int projectilesToAssign = EmittersArray[n].ProjectilePrefab.GetMaxProjectileCount();
 
                     if (projectilesToAssign == -1)
                     {
-                        EmittersArray[n].ProjectilePoolSize = 1000;
+                        //EmittersArray[n].ProjectilePoolSize = 1000;
                         projectilesToAssign = 1000;
                     }
-
-                    // Old code to auto assign pool sizes based on total Projectile Group -- would split allocation across all emitters.
-                    // This turns out to be problematic when adding/removing emitters on the fly.
-                    // New system will allocate per the emitter.
-
-                    // Total projectiles value not set on Emitter, Calculate max based on total groups even distribution
-                    //if (projectilesToAssign < 0)
-                    //{
-                    //    projectilesToAssign = EmittersArray[n].ProjectileType.MaxProjectileCount / ProjectileTypeCounters[EmittersArray[n].ProjectileType.Index].TotalGroups;
-                    //}
-                    // Initialize Emitter pool size
+      
                     EmittersArray[n].Initialize(projectilesToAssign);
                     ProjectileTypeCounters[EmittersArray[n].ProjectilePrefab.Index].TotalProjectilesAssigned += projectilesToAssign;
 
@@ -204,7 +195,7 @@ namespace BulletHell
         // When adding emitter during play mode - you can register them with this function
         public void RegisterEmitter(ProjectileEmitterBase emitter)
         {
-            // Should probably use Emittercount here
+            // Should probably use Emittercount here - find the next empty slot in the array
             int nextEmpty = -1;
             for (int n = 0; n < EmittersArray.Length; n++)
             {
@@ -221,23 +212,14 @@ namespace BulletHell
                 EmittersArray[nextEmpty] = emitter;
                 ProjectileTypeCounters[emitter.ProjectilePrefab.Index].TotalGroups++;
 
-                int projectilesToAssign = emitter.ProjectilePoolSize;
+                int projectilesToAssign = emitter.ProjectilePrefab.GetMaxProjectileCount();
 
                 if (projectilesToAssign == -1)
                 {
-                    emitter.ProjectilePoolSize = 1000;
+                    //emitter.ProjectilePoolSize = 1000;
                     projectilesToAssign = 1000;
                 }
 
-                // Old code to auto assign pool sizes based on total Projectile Group -- would split allocation across all emitters.
-                // This turns out to be problematic when adding/removing emitters on the fly.
-                // New system will allocate per the emitter.
-
-                // Total projectiles value not set on Emitter, Calculate max based on total groups even distribution
-                //if (projectilesToAssign < 0)
-                //{
-                //    projectilesToAssign = emitter.ProjectileType.MaxProjectileCount / ProjectileTypeCounters[emitter.ProjectileType.Index].TotalGroups;
-                //}
                 // Initialize Emitter pool size
                 emitter.Initialize(projectilesToAssign);
                 ProjectileTypeCounters[emitter.ProjectilePrefab.Index].TotalProjectilesAssigned += projectilesToAssign;

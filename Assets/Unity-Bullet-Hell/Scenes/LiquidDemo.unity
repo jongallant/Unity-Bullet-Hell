@@ -249,11 +249,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ProjectilePrefab: {fileID: 8841699598713729355, guid: 4fedefd988960d247aaa18371098f2c1,
     type: 3}
-  INTERVAL: 0.1
-  Direction: {x: -1, y: 0}
-  TimeToLive: 15
-  Speed: 1
-  MaxSpeed: 100
   Scale: 0.15
   Color:
     serializedVersion: 2
@@ -284,13 +279,18 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  RotationSpeed: 0
+  TimeToLive: 15
+  CoolOffTime: 0.1
   AutoFire: 1
-  BounceOffSurfaces: 1
-  CullProjectilesOutsideCameraBounds: 0
+  Direction: {x: -1, y: 0}
+  Speed: 1
+  MaxSpeed: 100
+  RotationSpeed: 0
   CollisionDetection: 1
-  IsVariableTimeStep: 0
-  FIXED_TIMESTEP_RATE: 0.02
+  BounceOffSurfaces: 1
+  CullProjectilesOutsideCameraBounds: 1
+  IsFixedTimestep: 1
+  FixedTimestepRate: 0.01
   ProjectilePoolSize: 20000
   DrawOutlines: 1
   OutlineSize: 0.04
@@ -340,7 +340,7 @@ MonoBehaviour:
   Target: {fileID: 0}
   FollowTargetType: 0
   FollowIntensity: 0
-  UseOutlineColorPulse: 1
+  UseOutlineColorPulse: 0
   OutlinePulseSpeed: 0.9
   UseOutlineStaticPulse: 0
 --- !u!4 &86362418

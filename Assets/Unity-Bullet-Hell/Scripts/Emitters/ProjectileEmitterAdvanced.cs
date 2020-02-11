@@ -13,7 +13,7 @@ namespace BulletHell
         ColorPulse StaticOutlinePulse;
         ColorPulse StaticPulse;
 
-        [Foldout("General", true)]
+        [Foldout("Appearance", true)]
         [SerializeField] public bool UseColorPulse;
         [ConditionalField(nameof(UseColorPulse)), SerializeField] protected float PulseSpeed;
         [ConditionalField(nameof(UseColorPulse)), SerializeField] protected bool UseStaticPulse;
@@ -45,9 +45,14 @@ namespace BulletHell
         public new void Awake()
         {
             base.Awake();
-            Groups = new EmitterGroup[10];
 
+            Groups = new EmitterGroup[10];
             RefreshGroups();
+        }
+
+        void Start()
+        {
+            // To allow for the enable / disable checkbox in Inspector
         }
 
         private void RefreshGroups()
@@ -115,7 +120,7 @@ namespace BulletHell
 
             for (int g = 0; g < GroupCount; g++)
             {
-                if (Projectiles.AvailableCount > SpokeCount)
+                if (Projectiles.AvailableCount >= SpokeCount)
                 {
                     float rotation = 0;
                     bool left = true;
@@ -178,6 +183,18 @@ namespace BulletHell
                             node.Item.Outline = outlineNode;
                         }
 
+                        // Keep track of active projectiles                       
+                        PreviousActiveProjectileIndexes[ActiveProjectileIndexesPosition] = node.NodeIndex;
+                        ActiveProjectileIndexesPosition++;
+                        if (ActiveProjectileIndexesPosition < ActiveProjectileIndexes.Length)
+                        {
+                            PreviousActiveProjectileIndexes[ActiveProjectileIndexesPosition] = -1;
+                        }
+                        else
+                        {
+                            Debug.Log("Error: Projectile was fired before list of active projectiles was refreshed.");
+                        }
+
                         left = !left;
                     }
 
@@ -186,7 +203,7 @@ namespace BulletHell
                     else
                         Groups[g].Direction = Rotate(Groups[g].Direction, RotationSpeed);
                 }
-            }
+            }      
 
             return node;
         }
@@ -252,7 +269,6 @@ namespace BulletHell
             return currentRotation;
         }
 
-        // There is code duplication here, instead of calling base update.  this prevents from having to loop the projectiles twice.
         protected override void UpdateProjectiles(float tick)
         {
             ActiveProjectileCount = 0;
@@ -265,25 +281,33 @@ namespace BulletHell
             }
 
             UpdateStaticPulses(tick);
+
+            int previousIndexCount = ActiveProjectileIndexesPosition;
             ActiveProjectileIndexesPosition = 0;
-
-            // loop through all active projectile data
-            for (int i = 0; i < Projectiles.Nodes.Length; i++)
+                       
+            // Only loop through currently active projectiles
+            for (int i = 0; i < PreviousActiveProjectileIndexes.Length - 1; i++)
             {
-                UpdateProjectile(ref Projectiles.Nodes[i], tick);
+                // End of array is set to -1
+                if (PreviousActiveProjectileIndexes[i] == -1)
+                    break;
 
-                if (Projectiles.Nodes[i].Active)
+                Pool<ProjectileData>.Node node = Projectiles.GetActive(PreviousActiveProjectileIndexes[i]);
+                UpdateProjectile(ref node, tick);
+
+                // If still active store in our active projectile collection
+                if (node.Active)
                 {
-                    ActiveProjectileIndexes[ActiveProjectileIndexesPosition] = Projectiles.Nodes[i].NodeIndex;
+                    ActiveProjectileIndexes[ActiveProjectileIndexesPosition] = node.NodeIndex;
                     ActiveProjectileIndexesPosition++;
                 }
             }
 
-            // Set end point of array if not full
-            if (ActiveProjectileIndexesPosition + 1 < ActiveProjectileIndexes.Length - 1)
-            {
-                ActiveProjectileIndexes[ActiveProjectileIndexesPosition + 1] = -1;
-            }
+            // Set end point of array so we know when to stop looping
+            ActiveProjectileIndexes[ActiveProjectileIndexesPosition] = -1;
+
+            // Overwrite old previous active projectile index array
+            System.Array.Copy(ActiveProjectileIndexes, PreviousActiveProjectileIndexes, Mathf.Max(ActiveProjectileIndexesPosition, previousIndexCount));            
         }
 
         protected override void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick)

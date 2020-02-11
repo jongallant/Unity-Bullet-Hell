@@ -11,32 +11,30 @@ namespace BulletHell
 
     public abstract class ProjectileEmitterBase : MonoBehaviour
     {
-        protected Mesh Mesh;
-        protected Material Material;
-        protected float Interval;
+        private float Interval;
 
         // Each emitter has its own ProjectileData pool
         protected Pool<ProjectileData> Projectiles;
         protected Pool<ProjectileData> ProjectileOutlines;
 
+        [Foldout("Appearance", true)]
         [SerializeField] public ProjectilePrefab ProjectilePrefab;
-
-        [Foldout("General", true)]
-        [Range(0.01f, 5f), SerializeField] protected float INTERVAL = 0.1f;
-        [SerializeField] protected Vector2 Direction = Vector2.up;
-        [SerializeField] protected float TimeToLive = 5;
-        [Range(0.001f, 10f), SerializeField] protected float Speed = 1;
-        [Range(1f, 1000f), SerializeField] protected float MaxSpeed = 100;
         [Range(0.01f, 2f), SerializeField] protected float Scale = 0.05f;
         [SerializeField] protected Gradient Color;
-        [SerializeField] protected float RotationSpeed = 0;
+
+        [Foldout("General", true)]
+        [SerializeField] protected float TimeToLive = 5;
+        [Range(0.01f, 5f), SerializeField] protected float CoolOffTime = 0.1f;
         [SerializeField] protected bool AutoFire = true;
+        [SerializeField] protected Vector2 Direction = Vector2.up;        
+        [Range(0.001f, 10f), SerializeField] protected float Speed = 1;
+        [Range(1f, 100f), SerializeField] protected float MaxSpeed = 100;        
+        [SerializeField] protected float RotationSpeed = 0;        
+        [SerializeField] protected CollisionDetectionType CollisionDetection = CollisionDetectionType.CircleCast;
         [SerializeField] protected bool BounceOffSurfaces = true;        
         [SerializeField] protected bool CullProjectilesOutsideCameraBounds = true;
-        [SerializeField] protected CollisionDetectionType CollisionDetection = CollisionDetectionType.CircleCast;
-        [SerializeField] protected bool IsVariableTimeStep = false;
-        [ConditionalField(nameof(IsVariableTimeStep), true), Range(0.01f, 0.02f), SerializeField] protected float FIXED_TIMESTEP_RATE = 0.01f;
-        [Range(1, 1000000), SerializeField] public int ProjectilePoolSize = 1000;
+        [SerializeField] protected bool IsFixedTimestep = true;
+        [ConditionalField(nameof(IsFixedTimestep)), Range(0.01f, 0.02f), SerializeField] protected float FixedTimestepRate = 0.01f;      
 
         [Foldout("Outline", true)]
         [SerializeField] public bool DrawOutlines;
@@ -67,11 +65,12 @@ namespace BulletHell
         float Timer = 0;        
         int ProjectilesWaiting;
         protected int[] ActiveProjectileIndexes;
+        protected int[] PreviousActiveProjectileIndexes;
         protected int ActiveProjectileIndexesPosition;
 
         public void Awake()
         {
-            Interval = INTERVAL;
+            Interval = CoolOffTime + 0.25f;      // Start with a delay to allow time for scene to load
             Camera = Camera.main;
             
             ContactFilter = new ContactFilter2D
@@ -95,7 +94,8 @@ namespace BulletHell
                 ProjectileOutlines = new Pool<ProjectileData>(size);
             }
 
-            ActiveProjectileIndexes = new int[size];
+            ActiveProjectileIndexes = new int[size+1];
+            PreviousActiveProjectileIndexes = new int[size+1];
         }
 
         public void UpdateEmitter(float tick)
@@ -104,45 +104,36 @@ namespace BulletHell
             {
                 Interval -= tick;
             }
-
-            // Interval has expired
-            while (Interval <= 0)
+                                 
+            if (IsFixedTimestep)
             {
-                Interval += INTERVAL;
-
-                if (IsVariableTimeStep)
+                // Interval has expired
+                while (Interval <= 0)
                 {
-                    // Variable time step, we fire projectile immediately
-                    float leakedTime = Mathf.Abs(Interval);
-                    FireProjectile(Direction, leakedTime);
-                }
-                else
-                {                    
+                    Interval += CoolOffTime;
                     // Fixed timestep, we must wait until next fixed frame to fire projectile
                     ProjectilesWaiting++;
                 }
-            }
-
            
-            if (!IsVariableTimeStep)
-            {
                 bool updateExecuted = false;
                 Timer += tick;
 
                 // fixed timestep timer internal loop
-                while (Timer > FIXED_TIMESTEP_RATE)
+                while (Timer > FixedTimestepRate)
                 {
+                    Timer -= FixedTimestepRate;
+                    UpdateProjectiles(FixedTimestepRate);   // Must call UpdateProjectiles before firing new projectiles
+
                     while (ProjectilesWaiting > 0)
                     {
                         ProjectilesWaiting--;
-                        FireProjectile(Direction, ProjectilesWaiting * FIXED_TIMESTEP_RATE);
+                        FireProjectile(Direction, ProjectilesWaiting * FixedTimestepRate);
                     }
 
-                    Timer -= FIXED_TIMESTEP_RATE;
-
-                    UpdateProjectiles(FIXED_TIMESTEP_RATE);
                     updateExecuted = true;
                 }                      
+
+                // Update the data buffers
                 if (!updateExecuted)
                     UpdateBuffers(tick);    // update was not executed so re-use buffers but still remove tick from TTL
                 else
@@ -153,7 +144,14 @@ namespace BulletHell
                 // Variable time step -- just update the projectiles with deltatime
                 UpdateProjectiles(tick);
                 UpdateBuffers(0);
-            }            
+
+                while (Interval <= 0)
+                {
+                    Interval += CoolOffTime;
+                    float leakedTime = Mathf.Abs(Interval);
+                    FireProjectile(Direction, leakedTime);
+                }
+            }
         }
 
         // Function to rotate a vector by x degrees
@@ -205,7 +203,7 @@ namespace BulletHell
 
                 Pool<ProjectileData>.Node node = Projectiles.GetActive(ActiveProjectileIndexes[i]);
 
-                    //handle outline
+                //handle outline
                 if (node.Item.Outline.Item != null)
                 {
                     ProjectileManager.UpdateBufferData(ProjectilePrefab.Outline, node.Item.Outline.Item);
@@ -226,26 +224,31 @@ namespace BulletHell
                 }
 
                 Projectiles.Return(node.NodeIndex);
+                node.Active = false;
             }
         }
 
         public void ClearAllProjectiles()
         {
-            for (int i = 0; i < Projectiles.Nodes.Length; i++)
+            for (int i = 0; i < ActiveProjectileIndexes.Length; i++)
             {
-                if (Projectiles.Nodes[i].Active)
-                {
-                    Projectiles.Nodes[i].Item.TimeToLive = -1;
-                    if (Projectiles.Nodes[i].Item.Outline.Item != null)
-                    {
-                        ProjectileOutlines.Return(Projectiles.Nodes[i].Item.Outline.NodeIndex);
-                        Projectiles.Nodes[i].Item.Outline.Item = null;
-                    }
-                    
-                    Projectiles.Return(Projectiles.Nodes[i].NodeIndex);
-                }
+                // End of array is set to -1
+                if (ActiveProjectileIndexes[i] == -1)
+                    break;
+
+                Pool<ProjectileData>.Node node = Projectiles.GetActive(ActiveProjectileIndexes[i]);
+                ReturnNode(node);
+
+                ActiveProjectileIndexes[i] = -1;
             }
+
+            ActiveProjectileIndexesPosition = 0;
         }
         
+        void OnDisable()
+        {
+            ClearAllProjectiles();
+        }
+
     }
 }

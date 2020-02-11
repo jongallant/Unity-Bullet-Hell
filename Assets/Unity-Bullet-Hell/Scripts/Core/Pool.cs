@@ -11,7 +11,7 @@ namespace BulletHell
             public bool Active;
         }
 
-        public Node[] Nodes;
+        private Node[] Nodes;
         private Queue<int> Available;
 
         public int ActiveNodes
@@ -74,7 +74,6 @@ namespace BulletHell
                 Available.Enqueue(Nodes[index].NodeIndex);
             }
         }
-
     }
 
 }
