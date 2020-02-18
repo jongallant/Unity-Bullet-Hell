@@ -11,41 +11,41 @@ namespace BulletHell
 
     public abstract class ProjectileEmitterBase : MonoBehaviour
     {
-        private float Interval;
+        protected float Interval;
 
         // Each emitter has its own ProjectileData pool
         protected Pool<ProjectileData> Projectiles;
         protected Pool<ProjectileData> ProjectileOutlines;
 
         [Foldout("Appearance", true)]
-        [SerializeField] public ProjectilePrefab ProjectilePrefab;
-        [Range(0.01f, 2f), SerializeField] protected float Scale = 0.05f;
-        [SerializeField] protected Gradient Color;
+        public ProjectilePrefab ProjectilePrefab;
+        [Range(0.01f, 2f)] public float Scale = 0.05f;
+        public Gradient Color;
 
         [Foldout("General", true)]
-        [SerializeField] protected float TimeToLive = 5;
-        [Range(0.01f, 5f), SerializeField] protected float CoolOffTime = 0.1f;
-        [SerializeField] protected bool AutoFire = true;
-        [SerializeField] protected Vector2 Direction = Vector2.up;        
-        [Range(0.001f, 10f), SerializeField] protected float Speed = 1;
-        [Range(1f, 100f), SerializeField] protected float MaxSpeed = 100;        
-        [SerializeField] protected float RotationSpeed = 0;        
-        [SerializeField] protected CollisionDetectionType CollisionDetection = CollisionDetectionType.CircleCast;
-        [SerializeField] protected bool BounceOffSurfaces = true;        
-        [SerializeField] protected bool CullProjectilesOutsideCameraBounds = true;
-        [SerializeField] protected bool IsFixedTimestep = true;
-        [ConditionalField(nameof(IsFixedTimestep)), Range(0.01f, 0.02f), SerializeField] protected float FixedTimestepRate = 0.01f;      
+        public float TimeToLive = 5;
+        [Range(0.01f, 5f)] public float CoolOffTime = 0.1f;
+        public bool AutoFire = true;
+        public Vector2 Direction = Vector2.up;        
+        [Range(0.001f, 10f)] public float Speed = 1;
+        [Range(1f, 100f)] public float MaxSpeed = 100;        
+        public float RotationSpeed = 0;        
+        public CollisionDetectionType CollisionDetection = CollisionDetectionType.CircleCast;
+        public bool BounceOffSurfaces = true;        
+        public bool CullProjectilesOutsideCameraBounds = true;
+        public bool IsFixedTimestep = true;
+        [ConditionalField(nameof(IsFixedTimestep)), Range(0.01f, 0.02f)] public float FixedTimestepRate = 0.01f;      
 
         [Foldout("Outline", true)]
-        [SerializeField] public bool DrawOutlines;
-        [ConditionalField(nameof(DrawOutlines)), Range(0.0f, 1f), SerializeField] public float OutlineSize;
-        [ConditionalField(nameof(DrawOutlines)), SerializeField] protected Gradient OutlineColor;
+        public bool DrawOutlines;
+        [ConditionalField(nameof(DrawOutlines)), Range(0.0f, 1f)] public float OutlineSize;
+        [ConditionalField(nameof(DrawOutlines))] public Gradient OutlineColor;
 
         [Foldout("Modifiers", true)]
-        [SerializeField] protected Vector2 Gravity = Vector2.zero;
-        [Range(0.0f, 1f), SerializeField] protected float BounceAbsorbtionY;
-        [Range(0.0f, 1f), SerializeField] protected float BounceAbsorbtionX;                  
-        [Range(-10f, 10f), SerializeField] protected float Acceleration = 0;
+        public Vector2 Gravity = Vector2.zero;
+        [Range(0.0f, 1f)] public float BounceAbsorbtionY;
+        [Range(0.0f, 1f)] public float BounceAbsorbtionX;                  
+        [Range(-10f, 10f)] public float Acceleration = 0;
 
         // Current active projectiles from this emitter
         public int ActiveProjectileCount { get; protected set; }
@@ -104,17 +104,29 @@ namespace BulletHell
             {
                 Interval -= tick;
             }
-                                 
+            else
+            {
+                // not autofire, so just deal with the cooldown
+                if (Interval > 0)
+                {
+                    Interval -= tick;
+                }
+            }
+
+
             if (IsFixedTimestep)
             {
-                // Interval has expired
-                while (Interval <= 0)
+                if (AutoFire)
                 {
-                    Interval += CoolOffTime;
-                    // Fixed timestep, we must wait until next fixed frame to fire projectile
-                    ProjectilesWaiting++;
+                    // Interval has expired
+                    while (Interval <= 0)
+                    {
+                        Interval += CoolOffTime;
+                        // Fixed timestep, we must wait until next fixed frame to fire projectile
+                        ProjectilesWaiting++;
+                    }
                 }
-           
+
                 bool updateExecuted = false;
                 Timer += tick;
 
@@ -124,14 +136,17 @@ namespace BulletHell
                     Timer -= FixedTimestepRate;
                     UpdateProjectiles(FixedTimestepRate);   // Must call UpdateProjectiles before firing new projectiles
 
-                    while (ProjectilesWaiting > 0)
+                    if (AutoFire)
                     {
-                        ProjectilesWaiting--;
-                        FireProjectile(Direction, ProjectilesWaiting * FixedTimestepRate);
+                        while (ProjectilesWaiting > 0)
+                        {
+                            ProjectilesWaiting--;
+                            FireProjectile(Direction, ProjectilesWaiting * FixedTimestepRate);
+                        }
                     }
 
                     updateExecuted = true;
-                }                      
+                }
 
                 // Update the data buffers
                 if (!updateExecuted)
@@ -145,11 +160,14 @@ namespace BulletHell
                 UpdateProjectiles(tick);
                 UpdateBuffers(0);
 
-                while (Interval <= 0)
+                if (AutoFire)
                 {
-                    float leakedTime = Mathf.Abs(Interval);
-                    Interval += CoolOffTime;                    
-                    FireProjectile(Direction, leakedTime);
+                    while (Interval <= 0)
+                    {
+                        float leakedTime = Mathf.Abs(Interval);
+                        Interval += CoolOffTime;
+                        FireProjectile(Direction, leakedTime);
+                    }
                 }
             }
         }
@@ -173,7 +191,54 @@ namespace BulletHell
 
         protected abstract void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick);
 
-        protected abstract void UpdateProjectiles(float tick);
+        protected virtual void UpdateProjectiles(float tick)
+        {
+
+            ActiveProjectileCount = 0;
+            ActiveOutlineCount = 0;
+
+            //Update camera planes if needed
+            if (CullProjectilesOutsideCameraBounds)
+            {
+                GeometryUtility.CalculateFrustumPlanes(Camera, Planes);
+            }
+
+            int previousIndexCount = ActiveProjectileIndexesPosition;
+            ActiveProjectileIndexesPosition = 0;
+
+            // Only loop through currently active projectiles
+            for (int i = 0; i < PreviousActiveProjectileIndexes.Length - 1; i++)
+            {
+                // End of array is set to -1
+                if (PreviousActiveProjectileIndexes[i] == -1)
+                    break;
+
+                Pool<ProjectileData>.Node node = Projectiles.GetActive(PreviousActiveProjectileIndexes[i]);
+                UpdateProjectile(ref node, tick);
+
+                // If still active store in our active projectile collection
+                if (node.Active)
+                {
+                    ActiveProjectileIndexes[ActiveProjectileIndexesPosition] = node.NodeIndex;
+                    ActiveProjectileIndexesPosition++;
+                }
+            }
+
+            // Set end point of array so we know when to stop looping
+            ActiveProjectileIndexes[ActiveProjectileIndexesPosition] = -1;
+
+            // Overwrite old previous active projectile index array
+            System.Array.Copy(ActiveProjectileIndexes, PreviousActiveProjectileIndexes, Mathf.Max(ActiveProjectileIndexesPosition, previousIndexCount));
+        }
+
+        protected virtual void UpdateProjectileColor(ref ProjectileData data)
+        {
+            data.Color = Color.Evaluate(1 - data.TimeToLive / TimeToLive);
+            if (data.Outline.Item != null)
+            {
+                data.Outline.Item.Color = OutlineColor.Evaluate(1 - data.TimeToLive / TimeToLive);
+            }
+        }
 
         protected void UpdateBuffers(float tick)
         {

@@ -22,11 +22,6 @@ namespace BulletHell
             return node;
         }
 
-        public new void UpdateEmitter(float tick)
-        {
-            base.UpdateEmitter(tick);
-        }
-
         protected override void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick)
         {
             throw new System.NotImplementedException();

@@ -28,9 +28,9 @@ namespace BulletHell
 
         [Foldout("Modifiers", true)]
         [SerializeField] public bool UseFollowTarget;       
-        [ConditionalField(nameof(UseFollowTarget)), SerializeField] protected Transform Target;
-        [ConditionalField(nameof(UseFollowTarget)), SerializeField] protected FollowTargetType FollowTargetType = FollowTargetType.Homing;
-        [ConditionalField(nameof(UseFollowTarget)), Range(0, 5), SerializeField] protected float FollowIntensity;
+        [ConditionalField(nameof(UseFollowTarget))] public Transform Target;
+        [ConditionalField(nameof(UseFollowTarget))] public FollowTargetType FollowTargetType = FollowTargetType.Homing;
+        [ConditionalField(nameof(UseFollowTarget)), Range(0, 5)] public float FollowIntensity;
 
         [Foldout("Outline", true)]
         [SerializeField] protected bool UseOutlineColorPulse;
@@ -116,7 +116,14 @@ namespace BulletHell
         {
             Pool<ProjectileData>.Node node = new Pool<ProjectileData>.Node();
 
+            Direction = direction;
             RefreshGroups();
+
+            if (!AutoFire)
+            {
+                if (Interval > 0) return node;
+                else Interval = CoolOffTime;
+            }
 
             for (int g = 0; g < GroupCount; g++)
             {
@@ -256,43 +263,8 @@ namespace BulletHell
 
         protected override void UpdateProjectiles(float tick)
         {
-            ActiveProjectileCount = 0;
-            ActiveOutlineCount = 0;
-
-            //Update camera planes if needed
-            if (CullProjectilesOutsideCameraBounds)
-            {
-                GeometryUtility.CalculateFrustumPlanes(Camera, Planes);
-            }
-
             UpdateStaticPulses(tick);
-
-            int previousIndexCount = ActiveProjectileIndexesPosition;
-            ActiveProjectileIndexesPosition = 0;
-                       
-            // Only loop through currently active projectiles
-            for (int i = 0; i < PreviousActiveProjectileIndexes.Length - 1; i++)
-            {
-                // End of array is set to -1
-                if (PreviousActiveProjectileIndexes[i] == -1)
-                    break;
-
-                Pool<ProjectileData>.Node node = Projectiles.GetActive(PreviousActiveProjectileIndexes[i]);
-                UpdateProjectile(ref node, tick);
-
-                // If still active store in our active projectile collection
-                if (node.Active)
-                {
-                    ActiveProjectileIndexes[ActiveProjectileIndexesPosition] = node.NodeIndex;
-                    ActiveProjectileIndexesPosition++;
-                }
-            }
-
-            // Set end point of array so we know when to stop looping
-            ActiveProjectileIndexes[ActiveProjectileIndexesPosition] = -1;
-
-            // Overwrite old previous active projectile index array
-            System.Array.Copy(ActiveProjectileIndexes, PreviousActiveProjectileIndexes, Mathf.Max(ActiveProjectileIndexesPosition, previousIndexCount));            
+            base.UpdateProjectiles(tick);
         }
 
         protected override void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick)
@@ -424,11 +396,6 @@ namespace BulletHell
                 }
             }
         }
-        
-        public new void UpdateEmitter(float tick)
-        {
-            base.UpdateEmitter(tick);
-        }
 
         private void UpdateProjectileNodePulse(float tick, ref ProjectileData data)
         {
@@ -458,7 +425,7 @@ namespace BulletHell
             }
         }
 
-        private void UpdateProjectileColor(ref ProjectileData data)
+        protected override void UpdateProjectileColor(ref ProjectileData data)
         {
             // foreground
             if (UseColorPulse)
