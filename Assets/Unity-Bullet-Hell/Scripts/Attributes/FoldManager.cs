@@ -1,5 +1,5 @@
 ﻿using UnityEditor;
-
+#if UNITY_EDITOR
 public static class FoldManager
 {
     public static bool GetFold(string name)
@@ -16,3 +16,4 @@ public static class FoldManager
         EditorPrefs.SetBool(name, value);        
     }
 }
+#endif

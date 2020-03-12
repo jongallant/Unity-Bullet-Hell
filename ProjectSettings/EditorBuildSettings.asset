@@ -5,7 +5,7 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: 
-    guid: 00000000000000000000000000000000
+  - enabled: 1
+    path: Assets/Unity-Bullet-Hell/Scenes/SampleScene.unity
+    guid: d1070b9e9ead88e48a9e88484e2ede86
   m_configObjects: {}
