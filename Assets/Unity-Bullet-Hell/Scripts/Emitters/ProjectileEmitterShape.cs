@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace BulletHell
 {
     // Emitter to fire pre-defined shape patterns
-    public class ProjectileEmitterShape : ProjectileEmitterBase
+    public class ProjectileEmitterShape : ProjectileEmitterAdvanced
     {
         [SerializeField]
         public GameObject ShapeTemplate;
@@ -22,7 +22,7 @@ namespace BulletHell
             TemplatePositions = new List<Vector3>();
             foreach (Transform child in ShapeTemplate.transform)
             {
-                TemplatePositions.Add(child.transform.position);
+                TemplatePositions.Add(child.transform.localPosition);
             }
         }
 
@@ -43,7 +43,36 @@ namespace BulletHell
                     node.Item.Position += node.Item.Velocity * leakedTime;
                     node.Item.Color = new Color(0.6f, 0.7f, 0.6f, 1);
                     node.Item.Acceleration = Acceleration;
+
+                    // Setup outline if we have one
+                    if (ProjectilePrefab.Outline != null && DrawOutlines)
+                    {
+                        Pool<ProjectileData>.Node outlineNode = ProjectileOutlines.Get();
+
+                        outlineNode.Item.Position = node.Item.Position;
+                        outlineNode.Item.Scale = node.Item.Scale + OutlineSize;
+                        outlineNode.Item.Color = OutlineColor.Evaluate(0);
+
+                        node.Item.Outline = outlineNode;
+                    }
+
+                    // Keep track of active projectiles                       
+                    PreviousActiveProjectileIndexes[ActiveProjectileIndexesPosition] = node.NodeIndex;
+                    ActiveProjectileIndexesPosition++;
+                    if (ActiveProjectileIndexesPosition < ActiveProjectileIndexes.Length)
+                    {
+                        PreviousActiveProjectileIndexes[ActiveProjectileIndexesPosition] = -1;
+                    }
+                    else
+                    {
+                        Debug.Log("Error: Projectile was fired before list of active projectiles was refreshed.");
+                    }
+
+                    UpdateProjectile(ref node, leakedTime);
+
                 }
+
+
 
                 Direction = Rotate(Direction, RotationSpeed);
             }
@@ -58,12 +87,14 @@ namespace BulletHell
 
         protected override void UpdateProjectile(ref Pool<ProjectileData>.Node node, float tick)
         {
-            throw new System.NotImplementedException();
+            base.UpdateProjectile(ref node, tick);
+            //throw new System.NotImplementedException();
         }
 
         protected override void UpdateProjectiles(float tick)
         {
-            throw new System.NotImplementedException();
+            base.UpdateProjectiles(tick);
+            //throw new System.NotImplementedException();
         }
     }
 }
