@@ -94,8 +94,8 @@ namespace BulletHell
                 ProjectileOutlines = new Pool<ProjectileData>(size);
             }
 
-            ActiveProjectileIndexes = new int[size+1];
-            PreviousActiveProjectileIndexes = new int[size+1];
+            ActiveProjectileIndexes = new int[size];
+            PreviousActiveProjectileIndexes = new int[size];
         }
 
         public void UpdateEmitter(float tick)
