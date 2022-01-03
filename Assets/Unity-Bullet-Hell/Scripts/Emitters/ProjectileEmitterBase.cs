@@ -88,10 +88,21 @@ namespace BulletHell
 
         public void Initialize(int size)
         {
-            Projectiles = new Pool<ProjectileData>(size);
-            if (ProjectilePrefab.Outline != null)
+            if (!ProjectileManager.Instance.FallbackRendering) // not fallback so as usual
             {
-                ProjectileOutlines = new Pool<ProjectileData>(size);
+                Projectiles = new Pool<ProjectileData>(size);
+                if (ProjectilePrefab.Outline != null)
+                {
+                    ProjectileOutlines = new Pool<ProjectileData>(size);
+                }
+            }
+            else // when fallback use hooked pool to store `GameObject`s for rendering
+            {
+                Projectiles = new PoolFallback<ProjectileData>(size, ProjectilePrefab);
+                if (ProjectilePrefab.Outline != null)
+                {
+                    ProjectileOutlines = new PoolFallback<ProjectileData>(size, ProjectilePrefab.Outline);
+                }
             }
 
             ActiveProjectileIndexes = new int[size];

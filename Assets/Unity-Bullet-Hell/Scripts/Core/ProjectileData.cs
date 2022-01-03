@@ -23,5 +23,10 @@ namespace BulletHell
 
         // Stores the pooled node that is used to draw the shadow for this projectile
         public Pool<ProjectileData>.Node Outline;
+
+        /// <summary>
+        /// GameObject to render in fallback mode
+        /// </summary>
+        public GameObject FallBackObject;
     }
 }

@@ -11,8 +11,8 @@ namespace BulletHell
             public bool Active;
         }
 
-        private Node[] Nodes;
-        private Queue<int> Available;
+        protected Node[] Nodes;
+        protected Queue<int> Available;
 
         public int ActiveNodes
         {
@@ -44,7 +44,7 @@ namespace BulletHell
             }
         }
 
-        public void Clear()
+        public virtual void Clear()
         {
             Available.Clear();
             for (int i = 0; i < Nodes.Length; i++)
@@ -59,14 +59,14 @@ namespace BulletHell
             return Nodes[index];
         }
 
-        public Node Get()
+        public virtual Node Get()
         {
             int index = Available.Dequeue();
             Nodes[index].Active = true;
             return Nodes[index];
         }
 
-        public void Return(int index)
+        public virtual void Return(int index)
         {
             if (Nodes[index].Active)
             {
