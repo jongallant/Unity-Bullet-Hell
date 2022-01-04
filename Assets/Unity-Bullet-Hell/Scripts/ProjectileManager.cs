@@ -5,6 +5,15 @@ namespace BulletHell
 {
     public class ProjectileManager : MonoBehaviour
     {
+        /// <summary>
+        /// `true` to disable custom shaders for rendering. Mainly because projectiles won't show on WebGL build.
+        /// </summary>
+#if UNITY_WEBGL
+        public readonly bool FallbackRendering = true;
+#else
+        public readonly bool FallbackRendering = false;
+#endif
+
         private bool Initialized = false;
 
         // Lists out all the projectile types found in Assets
@@ -236,14 +245,30 @@ namespace BulletHell
 
         public void UpdateBufferData(ProjectilePrefab projectileType, ProjectileData data)
         {
-            if (projectileType.Index != LastAccessedProjectileTypeIndex)
+            if (!data.FallBackObject) // not fallback so use custom shaders
             {
-                LastAccessedProjectileTypeIndex = projectileType.Index;
-                LastAccessedRenderer = IndirectRenderers[LastAccessedProjectileTypeIndex];
-            }
+                if (projectileType.Index != LastAccessedProjectileTypeIndex)
+                {
+                    LastAccessedProjectileTypeIndex = projectileType.Index;
+                    LastAccessedRenderer = IndirectRenderers[LastAccessedProjectileTypeIndex];
+                }
 
-            LastAccessedRenderer.UpdateBufferData(projectileType.BufferIndex, data);
-            projectileType.IncrementBufferIndex();
+                LastAccessedRenderer.UpdateBufferData(projectileType.BufferIndex, data);
+                projectileType.IncrementBufferIndex();
+            }
+            else // when fallback use normal `GameObject`
+            {
+                var transform = data.FallBackObject.transform;
+                transform.position = data.Position;
+                transform.localScale = new Vector3(data.Scale, data.Scale);
+                transform.localEulerAngles = Vector3.forward * data.Rotation;
+                data.FallBackObject.SetActive(true);
+
+                if (!projectileType.IsStaticColor)
+                {
+                    data.FallBackObject.GetComponent<SpriteRenderer>().color = data.Color;
+                }
+            }
         }
 
         public void Update()
@@ -303,6 +328,8 @@ namespace BulletHell
 
         public void DrawEmitters()
         {
+            if (FallbackRendering) return; // don't draw when using fallback rendering
+
             // We draw all emitters at the same time based on their Projectile Type.  1 draw call per projectile type.
             for (int n = 0; n < ProjectilePrefabs.Count; n++)
             {
