@@ -328,6 +328,8 @@ namespace BulletHell
 
         public void DrawEmitters()
         {
+            if (FallbackRendering) return; // don't draw when using fallback rendering
+
             // We draw all emitters at the same time based on their Projectile Type.  1 draw call per projectile type.
             for (int n = 0; n < ProjectilePrefabs.Count; n++)
             {
